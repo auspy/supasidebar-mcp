@@ -7,12 +7,27 @@ import { handleListFolders } from "./tools/folders.js";
 import { handleListTags } from "./tools/tags.js";
 import { handleGetLiveTabs } from "./tools/tabs.js";
 import { handleListRecent } from "./tools/recent.js";
+import { handleToggleSidebar, handleLaunchSidebar, handleSwitchSpace, handleOpenPreferences } from "./tools/actions.js";
+import { handleGetSettings, handleUpdateSetting, handleEnableFeature } from "./tools/settings.js";
+import { handleGetShortcuts, handleUpdateShortcut, handleClearShortcut } from "./tools/shortcuts.js";
+import { handleGetGuide } from "./tools/guide.js";
 
 export function createServer(client: BridgeClient): McpServer {
   const server = new McpServer({
     name: "supasidebar",
-    version: "0.1.0",
+    version: "0.2.0",
   });
+
+  // --- Guide (call first to understand what's available) ---
+
+  server.tool(
+    "guide",
+    "Get a complete guide to SupaSidebar's MCP capabilities. Shows all available tools, what they do, common user requests mapped to tool calls, setting categories, and feature presets. Call this first when you're unsure which tool to use.",
+    {},
+    async () => {
+      return { content: [{ type: "text", text: handleGetGuide() }] };
+    }
+  );
 
   // --- Read-only tools (Phase 1) ---
 
@@ -119,6 +134,169 @@ export function createServer(client: BridgeClient): McpServer {
     async ({ limit }) => {
       try {
         const text = await handleListRecent(client, limit);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  // --- Action tools ---
+
+  server.tool(
+    "toggle_sidebar",
+    "Toggle SupaSidebar visibility (show/hide). Returns the new visibility state.",
+    {},
+    async () => {
+      try {
+        const text = await handleToggleSidebar(client);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "launch_sidebar",
+    "Launch the SupaSidebar app if it's not already running. Uses macOS 'open -a' command.",
+    {},
+    async () => {
+      try {
+        const text = await handleLaunchSidebar();
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "switch_space",
+    "Switch to a different space. Spaces organize your links into separate workspaces. Get space IDs from list_spaces.",
+    {
+      spaceId: z.string().describe("The space ID to switch to. Get IDs from list_spaces."),
+    },
+    async ({ spaceId }) => {
+      try {
+        const text = await handleSwitchSpace(client, spaceId);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "open_preferences",
+    "Open the SupaSidebar Preferences window, optionally jumping to a specific tab. Useful when the user wants to see or adjust settings visually.",
+    {
+      tab: z.string().optional().describe("Preferences tab to open: general, sidebar, mouseTriggers, shortcuts, spaces, liveTabs, voice, aiTags, importExport, commandPanel, airTrafficControl, refer, about"),
+    },
+    async ({ tab }) => {
+      try {
+        const text = await handleOpenPreferences(client, tab);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  // --- Settings tools (Phase 2) ---
+
+  server.tool(
+    "get_settings",
+    "Get all SupaSidebar settings with current values, grouped by category. Use this to understand what features are available and how they're configured. Categories: sidebar, appearance, spaces, liveTabs, display, search, links, airTrafficControl, analytics, mcpBridge.",
+    {
+      category: z.string().optional().describe("Filter by category: sidebar, appearance, spaces, liveTabs, display, search, links, airTrafficControl, analytics, mcpBridge"),
+    },
+    async ({ category }) => {
+      try {
+        const text = await handleGetSettings(client, category);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "update_setting",
+    "Change a SupaSidebar setting. Use get_settings first to see available settings and their current values. Boolean settings use true/false, string settings use the documented options.",
+    {
+      key: z.string().describe("The setting key to update (e.g. 'isCompactMode', 'autoTileWindows'). Use get_settings to see all keys."),
+      value: z.union([z.boolean(), z.string(), z.number()]).describe("The new value. Booleans for toggles, strings for mode selections, numbers for numeric settings."),
+    },
+    async ({ key, value }) => {
+      try {
+        const text = await handleUpdateSetting(client, key, value);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "enable_feature",
+    "Enable a named feature preset that configures multiple settings at once. Presets: 'Smart Attach' (auto-show with browser), 'Independent Mode' (always visible), 'Space Isolation' (separate tabs per space), 'Minimal Sidebar' (compact and clean), 'Full Featured' (everything on). Use get_settings to see all presets.",
+    {
+      feature: z.string().describe("Feature name or alias, e.g. 'Smart Attach', 'minimal', 'space isolation', 'independent mode', 'full featured'."),
+    },
+    async ({ feature }) => {
+      try {
+        const text = await handleEnableFeature(client, feature);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  // --- Shortcut tools (Phase 2) ---
+
+  server.tool(
+    "get_shortcuts",
+    "List all configurable keyboard shortcuts with their current key bindings. Shows the shortcut name (used for updates), display string, title, and description.",
+    {},
+    async () => {
+      try {
+        const text = await handleGetShortcuts(client);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "update_shortcut",
+    "Change a keyboard shortcut binding. Requires at least one modifier key. Use get_shortcuts to see available shortcut names.",
+    {
+      name: z.string().describe("The shortcut name (e.g. 'toggleSidebar', 'saveCurrentPage'). Get names from get_shortcuts."),
+      key: z.string().describe("The key to bind (e.g. 'space', 's', 'k', 'f1', 'left'). Valid: a-z, 0-9, space, return, tab, escape, delete, left, right, up, down, f1-f12."),
+      modifiers: z.array(z.string()).describe("Modifier keys (at least one required). Valid: 'command', 'shift', 'option', 'control'. Aliases: 'cmd', 'ctrl', 'opt', 'alt'."),
+    },
+    async ({ name, key, modifiers }) => {
+      try {
+        const text = await handleUpdateShortcut(client, name, key, modifiers);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "clear_shortcut",
+    "Remove a keyboard shortcut binding so it no longer has a key combination assigned.",
+    {
+      name: z.string().describe("The shortcut name to clear (e.g. 'toggleSidebar'). Get names from get_shortcuts."),
+    },
+    async ({ name }) => {
+      try {
+        const text = await handleClearShortcut(client, name);
         return { content: [{ type: "text", text }] };
       } catch (err) {
         return { content: [{ type: "text", text: (err as Error).message }], isError: true };

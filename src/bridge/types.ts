@@ -60,6 +60,35 @@ export interface RecentItem {
   spaceName: string;
 }
 
+export interface ToggleResult {
+  ok: boolean;
+  visible: boolean;
+  error?: string;
+}
+
+export interface Setting {
+  key: string;
+  value: boolean | string | number;
+  type: "bool" | "string" | "number";
+  category: string;
+}
+
+export interface Shortcut {
+  name: string;
+  title: string;
+  description: string;
+  category: string;
+  key: string | null;
+  modifiers: string[];
+  displayString: string;
+}
+
+export interface ActionResult {
+  ok: boolean;
+  error?: string;
+  [key: string]: unknown;
+}
+
 export interface BridgeClient {
   getSpaces(): Promise<Space[]>;
   getLinks(spaceId: string, folderId?: string): Promise<Link[]>;
@@ -68,4 +97,13 @@ export interface BridgeClient {
   getTags(): Promise<Tag[]>;
   getLiveTabs(browser?: string): Promise<BrowserTab[]>;
   getRecent(limit?: number): Promise<RecentItem[]>;
+  toggleSidebar(): Promise<ToggleResult>;
+  // Phase 2: Settings & configuration
+  getSettings(category?: string): Promise<Setting[]>;
+  updateSetting(key: string, value: boolean | string | number): Promise<ActionResult>;
+  getShortcuts(): Promise<Shortcut[]>;
+  updateShortcut(name: string, key: string, modifiers: string[]): Promise<ActionResult>;
+  clearShortcut(name: string): Promise<ActionResult>;
+  switchSpace(spaceId: string): Promise<ActionResult>;
+  openPreferences(tab?: string): Promise<ActionResult>;
 }

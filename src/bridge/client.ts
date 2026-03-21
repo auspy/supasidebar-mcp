@@ -6,7 +6,7 @@
 // The SupaSidebar app runs a local HTTP server that this client talks to.
 // No data ever leaves your machine through this MCP server.
 
-import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem } from "./types.js";
+import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult } from "./types.js";
 
 // Hardcoded. Not configurable. This is a trust decision.
 const BRIDGE_HOST = "127.0.0.1";
@@ -17,7 +17,12 @@ const APP_NOT_RUNNING =
   "SupaSidebar is not running or its local API is not enabled. " +
   "Please open SupaSidebar and ensure the MCP bridge is turned on in Preferences.";
 
-async function request<T>(path: string, params?: Record<string, string>): Promise<T> {
+async function request<T>(
+  path: string,
+  params?: Record<string, string>,
+  method: "GET" | "POST" | "PUT" = "GET",
+  body?: Record<string, unknown>
+): Promise<T> {
   const url = new URL(`${BASE_URL}${path}`);
   if (params) {
     for (const [key, value] of Object.entries(params)) {
@@ -25,9 +30,15 @@ async function request<T>(path: string, params?: Record<string, string>): Promis
     }
   }
 
+  const fetchOptions: RequestInit = { method };
+  if (body) {
+    fetchOptions.headers = { "Content-Type": "application/json" };
+    fetchOptions.body = JSON.stringify(body);
+  }
+
   let response: Response;
   try {
-    response = await fetch(url.toString());
+    response = await fetch(url.toString(), fetchOptions);
   } catch (err: unknown) {
     const code = (err as NodeJS.ErrnoException).cause
       ? ((err as NodeJS.ErrnoException).cause as NodeJS.ErrnoException).code
@@ -82,6 +93,40 @@ export function createBridgeClient(): BridgeClient {
       const params: Record<string, string> = {};
       if (limit) params.limit = String(limit);
       return request<RecentItem[]>("/recent", params);
+    },
+
+    async toggleSidebar(): Promise<ToggleResult> {
+      return request<ToggleResult>("/actions/toggle-sidebar", undefined, "POST");
+    },
+
+    async getSettings(category?: string): Promise<Setting[]> {
+      const params: Record<string, string> = {};
+      if (category) params.category = category;
+      return request<Setting[]>("/settings", params);
+    },
+
+    async updateSetting(key: string, value: boolean | string | number): Promise<ActionResult> {
+      return request<ActionResult>("/settings", undefined, "PUT", { key, value });
+    },
+
+    async getShortcuts(): Promise<Shortcut[]> {
+      return request<Shortcut[]>("/shortcuts");
+    },
+
+    async updateShortcut(name: string, key: string, modifiers: string[]): Promise<ActionResult> {
+      return request<ActionResult>(`/shortcuts/${name}`, undefined, "PUT", { key, modifiers });
+    },
+
+    async clearShortcut(name: string): Promise<ActionResult> {
+      return request<ActionResult>(`/shortcuts/${name}`, undefined, "PUT", { clear: true });
+    },
+
+    async switchSpace(spaceId: string): Promise<ActionResult> {
+      return request<ActionResult>("/actions/switch-space", undefined, "POST", { spaceId });
+    },
+
+    async openPreferences(tab?: string): Promise<ActionResult> {
+      return request<ActionResult>("/actions/open-preferences", undefined, "POST", tab ? { tab } : {});
     },
   };
 }

@@ -1,6 +1,6 @@
 {
   "name": "supasidebar-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server for SupaSidebar — lets AI assistants interact with your bookmarks, spaces, and tabs. Open source. Zero telemetry.",
   "type": "module",
   "bin": {

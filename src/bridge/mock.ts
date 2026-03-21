@@ -2,7 +2,7 @@
 // Used for testing the MCP server without the SupaSidebar app running.
 // Activate with: --mock flag or SUPASIDEBAR_MCP_MOCK=1 env var.
 
-import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem } from "./types.js";
+import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult } from "./types.js";
 
 const spaces: Space[] = [
   { id: "sp-1", name: "Work", color: "#3B82F6", icon: "briefcase", linkCount: 5, folderCount: 2, order: 0 },
@@ -56,6 +56,102 @@ const recentItems: RecentItem[] = [
   { linkId: "lk-6", name: "YouTube Music", url: "https://music.youtube.com", openedAt: "2026-03-19T07:00:00Z", spaceId: "sp-2", spaceName: "Personal" },
 ];
 
+// Mock settings with realistic defaults
+const mockSettingsState = new Map<string, boolean | string | number>([
+  ["isLeftSide", true],
+  ["isDraggable", true],
+  ["isResizable", true],
+  ["isCompactMode", false],
+  ["browserAutoVisibilityEnabled", true],
+  ["smartAttachFillScreen", true],
+  ["autoTileWindows", "smart"],
+  ["sidebarHideBehavior", "fill"],
+  ["keepSidebarVisibleWithAllApps", false],
+  ["showSidebarOnFinder", false],
+  ["browserWindowAdjustmentMode", "fill"],
+  ["floatingButtonEnabled", false],
+  ["preventBrowserOverlap", true],
+  ["smartSideSwitch", false],
+  ["opacityOnFocusChange", false],
+  ["spaceColorTintEnabled", true],
+  ["spaceColorTintOpacity", 0.15],
+  ["spaceNavigationEnabled", true],
+  ["spaceNavigationNumberShortcutsEnabled", true],
+  ["saveTabsOnSpaceSwitch", false],
+  ["tabRestoreBehavior", "ask"],
+  ["spaceSwitchSuggestionBehavior", "ask"],
+  ["closeTabsOnSpaceChange", false],
+  ["autoLaunchBrowserOnProfileSpace", false],
+  ["naturalSwipeDirection", true],
+  ["showLiveTabs", true],
+  ["backgroundTabSync", false],
+  ["showItemCounts", true],
+  ["useFolderIconsForExpansion", false],
+  ["showBrowserIconsOnHover", true],
+  ["recentsEnabled", true],
+  ["recentsDisplayLimit", 5],
+  ["webSearchSuggestionsEnabled", true],
+  ["defaultSearchEngine", "google"],
+  ["linkOpeningBehavior", "default"],
+  ["autoTagLinksEnabled", false],
+  ["pinnedItemNumberShortcutsEnabled", true],
+  ["atcEnabled", false],
+  ["analyticsEnabled", true],
+  ["mcpBridgeEnabled", true],
+]);
+
+const settingTypes: Record<string, "bool" | "string" | "number"> = {
+  isLeftSide: "bool", isDraggable: "bool", isResizable: "bool", isCompactMode: "bool",
+  browserAutoVisibilityEnabled: "bool", smartAttachFillScreen: "bool", autoTileWindows: "string",
+  sidebarHideBehavior: "string", keepSidebarVisibleWithAllApps: "bool", showSidebarOnFinder: "bool",
+  browserWindowAdjustmentMode: "string", floatingButtonEnabled: "bool", preventBrowserOverlap: "bool",
+  smartSideSwitch: "bool", opacityOnFocusChange: "bool", spaceColorTintEnabled: "bool",
+  spaceColorTintOpacity: "number", spaceNavigationEnabled: "bool",
+  spaceNavigationNumberShortcutsEnabled: "bool", saveTabsOnSpaceSwitch: "bool",
+  tabRestoreBehavior: "string", spaceSwitchSuggestionBehavior: "string",
+  closeTabsOnSpaceChange: "bool", autoLaunchBrowserOnProfileSpace: "bool",
+  naturalSwipeDirection: "bool", showLiveTabs: "bool", backgroundTabSync: "bool",
+  showItemCounts: "bool", useFolderIconsForExpansion: "bool", showBrowserIconsOnHover: "bool",
+  recentsEnabled: "bool", recentsDisplayLimit: "number", webSearchSuggestionsEnabled: "bool",
+  defaultSearchEngine: "string", linkOpeningBehavior: "string", autoTagLinksEnabled: "bool",
+  pinnedItemNumberShortcutsEnabled: "bool", atcEnabled: "bool", analyticsEnabled: "bool",
+  mcpBridgeEnabled: "bool",
+};
+
+const settingCategories: Record<string, string> = {
+  isLeftSide: "sidebar", isDraggable: "sidebar", isResizable: "sidebar", isCompactMode: "sidebar",
+  browserAutoVisibilityEnabled: "sidebar", smartAttachFillScreen: "sidebar", autoTileWindows: "sidebar",
+  sidebarHideBehavior: "sidebar", keepSidebarVisibleWithAllApps: "sidebar", showSidebarOnFinder: "sidebar",
+  browserWindowAdjustmentMode: "sidebar", floatingButtonEnabled: "sidebar", preventBrowserOverlap: "sidebar",
+  smartSideSwitch: "sidebar", opacityOnFocusChange: "appearance", spaceColorTintEnabled: "appearance",
+  spaceColorTintOpacity: "appearance", spaceNavigationEnabled: "spaces",
+  spaceNavigationNumberShortcutsEnabled: "spaces", saveTabsOnSpaceSwitch: "spaces",
+  tabRestoreBehavior: "spaces", spaceSwitchSuggestionBehavior: "spaces",
+  closeTabsOnSpaceChange: "spaces", autoLaunchBrowserOnProfileSpace: "spaces",
+  naturalSwipeDirection: "spaces", showLiveTabs: "liveTabs", backgroundTabSync: "liveTabs",
+  showItemCounts: "display", useFolderIconsForExpansion: "display", showBrowserIconsOnHover: "display",
+  recentsEnabled: "display", recentsDisplayLimit: "display", webSearchSuggestionsEnabled: "search",
+  defaultSearchEngine: "search", linkOpeningBehavior: "links", autoTagLinksEnabled: "links",
+  pinnedItemNumberShortcutsEnabled: "links", atcEnabled: "airTrafficControl",
+  analyticsEnabled: "analytics", mcpBridgeEnabled: "mcpBridge",
+};
+
+const mockShortcuts: Shortcut[] = [
+  { name: "toggleSidebar", title: "Toggle Sidebar", description: "Show or hide the main sidebar", category: "global", key: "space", modifiers: ["command", "shift"], displayString: "⇧⌘Space" },
+  { name: "focusSidebar", title: "Focus Sidebar", description: "Bring sidebar into focus", category: "global", key: "f", modifiers: ["command", "control"], displayString: "⌃⌘F" },
+  { name: "toggleCommandPanel", title: "Open Command Panel", description: "Quick access to search and commands", category: "global", key: "k", modifiers: ["command", "control"], displayString: "⌃⌘K" },
+  { name: "toggleFollowActiveSpace", title: "Pin Sidebar", description: "Pin sidebar to follow you across all desktop spaces", category: "global", key: "p", modifiers: ["command", "control"], displayString: "⌃⌘P" },
+  { name: "toggleSidebarSide", title: "Toggle Sidebar Side", description: "Switch sidebar between left and right sides", category: "global", key: "l", modifiers: ["command", "control"], displayString: "⌃⌘L" },
+  { name: "toggleFillScreen", title: "Toggle Fill Screen", description: "Toggle browser fill screen mode", category: "global", key: "f", modifiers: ["command", "option"], displayString: "⌥⌘F" },
+  { name: "saveCurrentPage", title: "Smart Save", description: "Save current page from browser or add files from Finder", category: "browser", key: "s", modifiers: ["command", "control"], displayString: "⌃⌘S" },
+  { name: "copyCurrentURL", title: "Smart Copy", description: "Copy URL from browsers or file paths from Finder", category: "browser", key: "c", modifiers: ["command", "control"], displayString: "⌃⌘C" },
+  { name: "addFinderFolder", title: "Add Current Folder", description: "Add current Finder folder to sidebar", category: "browser", key: "a", modifiers: ["command", "option"], displayString: "⌥⌘A" },
+  { name: "saveAllBrowserTabs", title: "Save All Browser Tabs", description: "Save all open browser tabs to a new folder", category: "browser", key: "t", modifiers: ["command", "control"], displayString: "⌃⌘T" },
+  { name: "openCurrentTabInOtherBrowser", title: "Open Tab in Other Browser", description: "Open the current browser tab in a different browser", category: "browser", key: "b", modifiers: ["command", "control"], displayString: "⌃⌘B" },
+];
+
+let mockSidebarVisible = false;
+
 function fuzzyMatch(text: string, query: string): boolean {
   const lower = text.toLowerCase();
   const q = query.toLowerCase();
@@ -95,6 +191,62 @@ export function createMockClient(): BridgeClient {
 
     async getRecent(limit = 10) {
       return recentItems.slice(0, limit);
+    },
+
+    async toggleSidebar(): Promise<ToggleResult> {
+      mockSidebarVisible = !mockSidebarVisible;
+      return { ok: true, visible: mockSidebarVisible };
+    },
+
+    async getSettings(category?: string): Promise<Setting[]> {
+      const settings: Setting[] = [];
+      for (const [key, value] of mockSettingsState) {
+        const cat = settingCategories[key] ?? "other";
+        if (category && cat !== category) continue;
+        settings.push({ key, value, type: settingTypes[key] ?? "string", category: cat });
+      }
+      return settings;
+    },
+
+    async updateSetting(key: string, value: boolean | string | number): Promise<ActionResult> {
+      if (!mockSettingsState.has(key)) {
+        return { ok: false, error: `Unknown setting: ${key}` };
+      }
+      mockSettingsState.set(key, value);
+      return { ok: true, key, value };
+    },
+
+    async getShortcuts(): Promise<Shortcut[]> {
+      return mockShortcuts;
+    },
+
+    async updateShortcut(name: string, key: string, modifiers: string[]): Promise<ActionResult> {
+      const shortcut = mockShortcuts.find((s) => s.name === name);
+      if (!shortcut) return { ok: false, error: `Unknown shortcut: ${name}` };
+      shortcut.key = key;
+      shortcut.modifiers = modifiers;
+      const modSymbols = modifiers.map((m) => ({ command: "⌘", shift: "⇧", option: "⌥", control: "⌃" })[m] ?? m);
+      shortcut.displayString = modSymbols.join("") + key.charAt(0).toUpperCase() + key.slice(1);
+      return { ok: true, name, displayString: shortcut.displayString };
+    },
+
+    async clearShortcut(name: string): Promise<ActionResult> {
+      const shortcut = mockShortcuts.find((s) => s.name === name);
+      if (!shortcut) return { ok: false, error: `Unknown shortcut: ${name}` };
+      shortcut.key = null;
+      shortcut.modifiers = [];
+      shortcut.displayString = "Not set";
+      return { ok: true, name, displayString: "Not set" };
+    },
+
+    async switchSpace(spaceId: string): Promise<ActionResult> {
+      const space = spaces.find((s) => s.id === spaceId);
+      if (!space) return { ok: false, error: `Space not found: ${spaceId}` };
+      return { ok: true, spaceId };
+    },
+
+    async openPreferences(tab?: string): Promise<ActionResult> {
+      return { ok: true, tab: tab ?? "general" };
     },
   };
 }
