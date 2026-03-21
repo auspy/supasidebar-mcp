@@ -2,7 +2,7 @@
 // Used for testing the MCP server without the SupaSidebar app running.
 // Activate with: --mock flag or SUPASIDEBAR_MCP_MOCK=1 env var.
 
-import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult } from "./types.js";
+import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut } from "./types.js";
 
 const spaces: Space[] = [
   { id: "sp-1", name: "Work", color: "#3B82F6", icon: "briefcase", linkCount: 5, folderCount: 2, order: 0 },
@@ -247,6 +247,36 @@ export function createMockClient(): BridgeClient {
 
     async openPreferences(tab?: string): Promise<ActionResult> {
       return { ok: true, tab: tab ?? "general" };
+    },
+
+    async toggleCommandPanel(): Promise<ToggleResult> {
+      return { ok: true, visible: true };
+    },
+
+    async openLink(url: string, browser?: string): Promise<ActionResult> {
+      return { ok: true, url, browser: browser ?? "default" };
+    },
+
+    async webSearch(query: string, engine?: string, browser?: string): Promise<ActionResult> {
+      return { ok: true, query, engine: engine ?? "Google", browser: browser ?? "default", url: `https://www.google.com/search?q=${encodeURIComponent(query)}` };
+    },
+
+    async listSearchShortcuts(): Promise<SearchShortcut[]> {
+      return [
+        { type: "engine", name: "Google", keyword: "google", searchURL: "https://www.google.com/search?q=" },
+        { type: "engine", name: "DuckDuckGo", keyword: "duckduckgo", searchURL: "https://duckduckgo.com/?q=" },
+        { type: "engine", name: "Perplexity", keyword: "perplexity", searchURL: "https://www.perplexity.ai/search?q=" },
+        { type: "shortcut", name: "YouTube", keyword: "yo", searchURL: "https://www.youtube.com/results?search_query=", id: "sc-1" },
+        { type: "shortcut", name: "Reddit", keyword: "reddit", searchURL: "https://www.reddit.com/search/?q=", id: "sc-2" },
+      ];
+    },
+
+    async addSearchShortcut(keyword: string, name: string, searchURL: string): Promise<ActionResult> {
+      return { ok: true, keyword, name, searchURL };
+    },
+
+    async removeSearchShortcut(_keywordOrId: string): Promise<ActionResult> {
+      return { ok: true };
     },
   };
 }

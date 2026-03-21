@@ -6,7 +6,7 @@
 // The SupaSidebar app runs a local HTTP server that this client talks to.
 // No data ever leaves your machine through this MCP server.
 
-import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult } from "./types.js";
+import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut } from "./types.js";
 
 // Hardcoded. Not configurable. This is a trust decision.
 const BRIDGE_HOST = "127.0.0.1";
@@ -127,6 +127,38 @@ export function createBridgeClient(): BridgeClient {
 
     async openPreferences(tab?: string): Promise<ActionResult> {
       return request<ActionResult>("/actions/open-preferences", undefined, "POST", tab ? { tab } : {});
+    },
+
+    async toggleCommandPanel(): Promise<ToggleResult> {
+      return request<ToggleResult>("/actions/toggle-command-panel", undefined, "POST");
+    },
+
+    async openLink(url: string, browser?: string): Promise<ActionResult> {
+      const body: Record<string, unknown> = { url };
+      if (browser) body.browser = browser;
+      return request<ActionResult>("/actions/open-link", undefined, "POST", body);
+    },
+
+    async webSearch(query: string, engine?: string, browser?: string): Promise<ActionResult> {
+      const body: Record<string, unknown> = { query };
+      if (engine) body.engine = engine;
+      if (browser) body.browser = browser;
+      return request<ActionResult>("/actions/web-search", undefined, "POST", body);
+    },
+
+    async listSearchShortcuts(): Promise<SearchShortcut[]> {
+      return request<SearchShortcut[]>("/search-shortcuts");
+    },
+
+    async addSearchShortcut(keyword: string, name: string, searchURL: string): Promise<ActionResult> {
+      return request<ActionResult>("/search-shortcuts", undefined, "POST", { keyword, name, searchURL });
+    },
+
+    async removeSearchShortcut(keywordOrId: string): Promise<ActionResult> {
+      // Try as UUID first, then as keyword
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(keywordOrId);
+      const body = isUUID ? { id: keywordOrId } : { keyword: keywordOrId };
+      return request<ActionResult>("/search-shortcuts/remove", undefined, "POST", body);
     },
   };
 }

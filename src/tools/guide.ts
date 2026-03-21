@@ -39,10 +39,21 @@ It organizes everything into Spaces (workspaces) with Folders and Tags.
   clear_shortcut      → Remove a shortcut binding
 
 🎯 ACTIONS
-  toggle_sidebar      → Show/hide the sidebar
-  launch_sidebar      → Start SupaSidebar if not running
-  switch_space        → Navigate to a different space
-  open_preferences    → Open Preferences window (optionally to a specific tab)
+  toggle_sidebar        → Show/hide the sidebar
+  toggle_command_panel  → Show/hide the command panel (search/command palette)
+  launch_sidebar        → Start SupaSidebar if not running
+  switch_space          → Navigate to a different space
+  open_preferences      → Open Preferences window (optionally to a specific tab)
+
+🌐 BROWSER & SEARCH
+  open_link               → Open a URL in a specific browser (or default)
+  web_search              → Search using any engine or custom website shortcut
+  list_search_shortcuts   → See all available engines + custom shortcuts
+  add_search_shortcut     → Add a custom website search (e.g. GitHub, Stack Overflow)
+  remove_search_shortcut  → Remove a custom search shortcut
+
+  Built-in engines: Google, Bing, DuckDuckGo, Yahoo, Perplexity
+  Supported browsers: Safari, Chrome, Firefox, Edge, Arc, Brave, Vivaldi, Dia, Comet, Orion, Zen, Atlas, Wavebox, Helium
 
 ═══════════════════════════════════════════
  COMMON USER REQUESTS → WHAT TO DO
@@ -83,6 +94,21 @@ It organizes everything into Spaces (workspaces) with Folders and Tags.
 
 "Disable analytics"
   → update_setting key="analyticsEnabled" value=false
+
+"Open GitHub in Arc"
+  → open_link url="https://github.com" browser="Arc"
+
+"Search YouTube for Swift tutorials"
+  → web_search query="Swift tutorials" engine="yo"
+
+"Search with Perplexity for MCP protocol"
+  → web_search query="MCP protocol" engine="perplexity"
+
+"Add a GitHub search shortcut"
+  → add_search_shortcut keyword="gh" name="GitHub" searchURL="https://github.com/search?q="
+
+"What search shortcuts do I have?"
+  → list_search_shortcuts
 
 ═══════════════════════════════════════════
  SETTING CATEGORIES

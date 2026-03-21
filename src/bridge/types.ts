@@ -89,6 +89,14 @@ export interface ActionResult {
   [key: string]: unknown;
 }
 
+export interface SearchShortcut {
+  type: "engine" | "shortcut";
+  name: string;
+  keyword: string;
+  searchURL: string;
+  id?: string;
+}
+
 export interface BridgeClient {
   getSpaces(): Promise<Space[]>;
   getLinks(spaceId: string, folderId?: string): Promise<Link[]>;
@@ -106,4 +114,10 @@ export interface BridgeClient {
   clearShortcut(name: string): Promise<ActionResult>;
   switchSpace(spaceId: string): Promise<ActionResult>;
   openPreferences(tab?: string): Promise<ActionResult>;
+  toggleCommandPanel(): Promise<ToggleResult>;
+  openLink(url: string, browser?: string): Promise<ActionResult>;
+  webSearch(query: string, engine?: string, browser?: string): Promise<ActionResult>;
+  listSearchShortcuts(): Promise<SearchShortcut[]>;
+  addSearchShortcut(keyword: string, name: string, searchURL: string): Promise<ActionResult>;
+  removeSearchShortcut(keywordOrId: string): Promise<ActionResult>;
 }

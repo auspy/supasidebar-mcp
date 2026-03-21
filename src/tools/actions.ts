@@ -21,6 +21,14 @@ export async function handleLaunchSidebar(): Promise<string> {
   });
 }
 
+export async function handleToggleCommandPanel(client: BridgeClient): Promise<string> {
+  const result = await client.toggleCommandPanel();
+  if (!result.ok) {
+    throw new Error(result.error ?? "Failed to toggle command panel");
+  }
+  return result.visible ? "Command panel is now visible." : "Command panel is now hidden.";
+}
+
 export async function handleSwitchSpace(client: BridgeClient, spaceId: string): Promise<string> {
   const result = await client.switchSpace(spaceId);
   if (!result.ok) {

@@ -7,10 +7,11 @@ import { handleListFolders } from "./tools/folders.js";
 import { handleListTags } from "./tools/tags.js";
 import { handleGetLiveTabs } from "./tools/tabs.js";
 import { handleListRecent } from "./tools/recent.js";
-import { handleToggleSidebar, handleLaunchSidebar, handleSwitchSpace, handleOpenPreferences } from "./tools/actions.js";
-import { handleGetSettings, handleUpdateSetting, handleEnableFeature } from "./tools/settings.js";
+import { handleToggleSidebar, handleLaunchSidebar, handleSwitchSpace, handleOpenPreferences, handleToggleCommandPanel } from "./tools/actions.js";
+import { handleGetSettings, handleGetOneSetting, handleUpdateSetting, handleEnableFeature } from "./tools/settings.js";
 import { handleGetShortcuts, handleUpdateShortcut, handleClearShortcut } from "./tools/shortcuts.js";
 import { handleGetGuide } from "./tools/guide.js";
+import { handleOpenLink, handleWebSearch, handleListSearchShortcuts, handleAddSearchShortcut, handleRemoveSearchShortcut } from "./tools/browser.js";
 
 export function createServer(client: BridgeClient): McpServer {
   const server = new McpServer({
@@ -172,6 +173,20 @@ export function createServer(client: BridgeClient): McpServer {
   );
 
   server.tool(
+    "toggle_command_panel",
+    "Toggle the SupaSidebar command panel (search/command palette). Opens it if closed, closes it if open.",
+    {},
+    async () => {
+      try {
+        const text = await handleToggleCommandPanel(client);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
     "switch_space",
     "Switch to a different space. Spaces organize your links into separate workspaces. Get space IDs from list_spaces.",
     {
@@ -207,13 +222,16 @@ export function createServer(client: BridgeClient): McpServer {
 
   server.tool(
     "get_settings",
-    "Get all SupaSidebar settings with current values, grouped by category. Use this to understand what features are available and how they're configured. Categories: sidebar, appearance, spaces, liveTabs, display, search, links, airTrafficControl, analytics, mcpBridge.",
+    "Get SupaSidebar settings. With no arguments: returns all 40+ settings grouped by category. With 'key': returns a single setting by exact key or natural-language alias (e.g. 'compact mode', 'smart attach', 'atc'). With 'category': filters to one group.",
     {
+      key: z.string().optional().describe("A specific setting key (e.g. 'isCompactMode') or natural-language alias (e.g. 'compact mode', 'smart attach'). Returns just that one setting with full detail."),
       category: z.string().optional().describe("Filter by category: sidebar, appearance, spaces, liveTabs, display, search, links, airTrafficControl, analytics, mcpBridge"),
     },
-    async ({ category }) => {
+    async ({ key, category }) => {
       try {
-        const text = await handleGetSettings(client, category);
+        const text = key
+          ? await handleGetOneSetting(client, key)
+          : await handleGetSettings(client, category);
         return { content: [{ type: "text", text }] };
       } catch (err) {
         return { content: [{ type: "text", text: (err as Error).message }], isError: true };
@@ -297,6 +315,91 @@ export function createServer(client: BridgeClient): McpServer {
     async ({ name }) => {
       try {
         const text = await handleClearShortcut(client, name);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  // --- Browser & Search tools ---
+
+  server.tool(
+    "open_link",
+    "Open a URL in a specific browser or the default browser. Supports 14 browsers: Safari, Chrome, Firefox, Edge, Arc, Brave, Vivaldi, Dia, Comet, Orion, Zen, Atlas, Wavebox, Helium.",
+    {
+      url: z.string().describe("The URL to open (e.g. 'https://github.com')."),
+      browser: z.string().optional().describe("Browser to open in (e.g. 'Chrome', 'Arc', 'Safari'). Omit for default browser."),
+    },
+    async ({ url, browser }) => {
+      try {
+        const text = await handleOpenLink(client, url, browser);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "web_search",
+    "Search the web using a search engine or custom website shortcut. Built-in engines: Google, Bing, DuckDuckGo, Yahoo, Perplexity. Custom shortcuts let you search specific sites (e.g. YouTube, Reddit, GitHub). Use list_search_shortcuts to see all available.",
+    {
+      query: z.string().describe("The search query."),
+      engine: z.string().optional().describe("Search engine or shortcut keyword (e.g. 'google', 'perplexity', 'yo' for YouTube, 'reddit'). Defaults to user's configured default engine."),
+      browser: z.string().optional().describe("Browser to open results in. Omit for default browser."),
+    },
+    async ({ query, engine, browser }) => {
+      try {
+        const text = await handleWebSearch(client, query, engine, browser);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "list_search_shortcuts",
+    "List all available search engines and custom website search shortcuts. Shows built-in engines (Google, Bing, etc.) and user-created shortcuts (YouTube, Reddit, etc.) with their keywords for use with web_search.",
+    {},
+    async () => {
+      try {
+        const text = await handleListSearchShortcuts(client);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "add_search_shortcut",
+    "Add a custom website search shortcut so you can search a specific site via web_search. The searchURL should be the site's search URL with the query parameter at the end (e.g. 'https://www.youtube.com/results?search_query=').",
+    {
+      keyword: z.string().describe("Short keyword to trigger this shortcut (e.g. 'gh' for GitHub, 'so' for Stack Overflow). Used as: web_search engine='gh' query='...'"),
+      name: z.string().describe("Display name for the shortcut (e.g. 'GitHub', 'Stack Overflow')."),
+      searchURL: z.string().describe("The search URL base. The query will be appended to this. Example: 'https://github.com/search?q=' or 'https://stackoverflow.com/search?q='"),
+    },
+    async ({ keyword, name, searchURL }) => {
+      try {
+        const text = await handleAddSearchShortcut(client, keyword, name, searchURL);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "remove_search_shortcut",
+    "Remove a custom website search shortcut by its keyword or ID.",
+    {
+      keyword: z.string().describe("The shortcut keyword to remove (e.g. 'yo', 'reddit'). Can also be the UUID of the shortcut."),
+    },
+    async ({ keyword }) => {
+      try {
+        const text = await handleRemoveSearchShortcut(client, keyword);
         return { content: [{ type: "text", text }] };
       } catch (err) {
         return { content: [{ type: "text", text: (err as Error).message }], isError: true };

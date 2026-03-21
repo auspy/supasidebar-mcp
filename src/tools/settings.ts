@@ -335,6 +335,54 @@ export async function handleGetSettings(client: BridgeClient, category?: string)
   ].join("\n");
 }
 
+export async function handleGetOneSetting(client: BridgeClient, keyOrAlias: string): Promise<string> {
+  // Resolve alias to key
+  const resolvedKey = resolveSettingKey(keyOrAlias);
+  if (!resolvedKey) {
+    // Try partial match
+    const partial = Object.entries(settingsMeta).find(([key, meta]) => {
+      const input = keyOrAlias.toLowerCase();
+      return key.toLowerCase().includes(input) || meta.aliases.some((a) => a.includes(input));
+    });
+    if (!partial) {
+      return `No setting found matching "${keyOrAlias}". Use get_settings (with no key) to see all available settings.`;
+    }
+    return handleGetOneSetting(client, partial[0]);
+  }
+
+  const meta = settingsMeta[resolvedKey];
+  // Fetch just this setting's category to get the live value
+  const allSettings = await client.getSettings();
+  const setting = allSettings.find((s) => s.key === resolvedKey);
+
+  if (!setting) {
+    return `Setting "${resolvedKey}" is defined but not returned by the app. It may not be available in this version.`;
+  }
+
+  const lines = [
+    `${resolvedKey}: ${JSON.stringify(setting.value)}`,
+    "",
+    `Description: ${meta?.description ?? "No description"}`,
+    `Type: ${setting.type}`,
+    `Category: ${setting.category}`,
+  ];
+
+  if (meta?.options) lines.push(`Valid options: ${meta.options.join(", ")}`);
+  if (meta?.aliases.length) lines.push(`Aliases: ${meta.aliases.join(", ")}`);
+  if (meta?.requires?.length) lines.push(`Requires: ${meta.requires.join(", ")}`);
+  if (meta?.note) lines.push(`Note: ${meta.note}`);
+
+  // Show related feature presets
+  const relatedPresets = featurePresets.filter((p) => resolvedKey in p.settings);
+  if (relatedPresets.length > 0) {
+    lines.push(`\nPart of preset(s): ${relatedPresets.map((p) => `"${p.name}"`).join(", ")}`);
+  }
+
+  lines.push(`\nTo change: update_setting key="${resolvedKey}" value=...`);
+
+  return lines.join("\n");
+}
+
 export async function handleUpdateSetting(
   client: BridgeClient,
   key: string,
