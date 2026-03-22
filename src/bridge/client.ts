@@ -133,6 +133,10 @@ export function createBridgeClient(): BridgeClient {
       return request<ToggleResult>("/actions/toggle-command-panel", undefined, "POST");
     },
 
+    async getVisibility() {
+      return request<{ sidebar: boolean; commandPanel: boolean }>("/visibility");
+    },
+
     async openLink(url: string, browser?: string): Promise<ActionResult> {
       const body: Record<string, unknown> = { url };
       if (browser) body.browser = browser;

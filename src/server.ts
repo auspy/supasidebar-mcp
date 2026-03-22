@@ -7,7 +7,7 @@ import { handleListFolders } from "./tools/folders.js";
 import { handleListTags } from "./tools/tags.js";
 import { handleGetLiveTabs } from "./tools/tabs.js";
 import { handleListRecent } from "./tools/recent.js";
-import { handleToggleSidebar, handleLaunchSidebar, handleSwitchSpace, handleOpenPreferences, handleToggleCommandPanel } from "./tools/actions.js";
+import { handleToggleSidebar, handleLaunchSidebar, handleSwitchSpace, handleOpenPreferences, handleToggleCommandPanel, handleGetVisibility } from "./tools/actions.js";
 import { handleGetSettings, handleGetOneSetting, handleUpdateSetting, handleEnableFeature } from "./tools/settings.js";
 import { handleGetShortcuts, handleUpdateShortcut, handleClearShortcut } from "./tools/shortcuts.js";
 import { handleGetGuide } from "./tools/guide.js";
@@ -143,6 +143,20 @@ export function createServer(client: BridgeClient): McpServer {
   );
 
   // --- Action tools ---
+
+  server.tool(
+    "get_visibility",
+    "Check whether the sidebar and command panel are currently visible, without changing their state. Use this instead of toggling just to check.",
+    {},
+    async () => {
+      try {
+        const text = await handleGetVisibility(client);
+        return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
 
   server.tool(
     "toggle_sidebar",

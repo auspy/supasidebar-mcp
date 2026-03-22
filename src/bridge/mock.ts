@@ -253,6 +253,10 @@ export function createMockClient(): BridgeClient {
       return { ok: true, visible: true };
     },
 
+    async getVisibility() {
+      return { sidebar: mockSidebarVisible, commandPanel: false };
+    },
+
     async openLink(url: string, browser?: string): Promise<ActionResult> {
       return { ok: true, url, browser: browser ?? "default" };
     },

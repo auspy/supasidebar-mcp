@@ -115,6 +115,7 @@ export interface BridgeClient {
   switchSpace(spaceId: string): Promise<ActionResult>;
   openPreferences(tab?: string): Promise<ActionResult>;
   toggleCommandPanel(): Promise<ToggleResult>;
+  getVisibility(): Promise<{ sidebar: boolean; commandPanel: boolean }>;
   openLink(url: string, browser?: string): Promise<ActionResult>;
   webSearch(query: string, engine?: string, browser?: string): Promise<ActionResult>;
   listSearchShortcuts(): Promise<SearchShortcut[]>;

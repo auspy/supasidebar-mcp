@@ -21,6 +21,15 @@ export async function handleLaunchSidebar(): Promise<string> {
   });
 }
 
+export async function handleGetVisibility(client: BridgeClient): Promise<string> {
+  const state = await client.getVisibility();
+  const lines = [
+    `Sidebar: ${state.sidebar ? "visible" : "hidden"}`,
+    `Command Panel: ${state.commandPanel ? "visible" : "hidden"}`,
+  ];
+  return lines.join("\n");
+}
+
 export async function handleToggleCommandPanel(client: BridgeClient): Promise<string> {
   const result = await client.toggleCommandPanel();
   if (!result.ok) {
