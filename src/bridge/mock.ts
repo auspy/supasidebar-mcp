@@ -282,5 +282,62 @@ export function createMockClient(): BridgeClient {
     async removeSearchShortcut(_keywordOrId: string): Promise<ActionResult> {
       return { ok: true };
     },
+
+    async createSpace(name: string, color?: string, icon?: string): Promise<ActionResult> {
+      const id = `sp-${Date.now()}`;
+      const space: Space = {
+        id,
+        name,
+        color: color ?? "#007AFF",
+        icon: icon ?? "folder",
+        linkCount: 0,
+        folderCount: 0,
+        order: spaces.length,
+      };
+      spaces.push(space);
+      return { ok: true, id, name };
+    },
+
+    async createFolder(name: string, spaceId: string, parentFolderId?: string): Promise<ActionResult> {
+      const id = `fd-${Date.now()}`;
+      const folder: Folder = {
+        id,
+        name,
+        parentId: parentFolderId ?? null,
+        spaceId,
+        linkCount: 0,
+        children: [],
+        order: folders.filter((f) => f.spaceId === spaceId).length,
+      };
+      folders.push(folder);
+      return { ok: true, id, name, spaceId };
+    },
+
+    async addLink(url: string, spaceId: string, name?: string, folderId?: string, notes?: string): Promise<ActionResult> {
+      const id = `lk-${Date.now()}`;
+      const link: Link = {
+        id,
+        name: name ?? url,
+        url,
+        type: "web",
+        tags: [],
+        notes: notes ?? "",
+        folderId: folderId ?? null,
+        spaceId,
+        isPinned: false,
+        createdAt: new Date().toISOString(),
+        lastOpenedAt: null,
+      };
+      links.push(link);
+      return { ok: true, id, name: link.name, url, spaceId };
+    },
+
+    async moveLink(linkId: string, targetSpaceId?: string, targetFolderId?: string | null): Promise<ActionResult> {
+      const link = links.find((l) => l.id === linkId);
+      if (!link) return { ok: false, error: `Link not found: ${linkId}` };
+      if (targetSpaceId !== undefined) link.spaceId = targetSpaceId;
+      if (targetFolderId !== undefined) link.folderId = targetFolderId;
+      return { ok: true, id: linkId, newSpaceId: link.spaceId, newFolderId: link.folderId };
+    },
   };
 }

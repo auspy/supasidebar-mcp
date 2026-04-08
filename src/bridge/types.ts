@@ -121,4 +121,9 @@ export interface BridgeClient {
   listSearchShortcuts(): Promise<SearchShortcut[]>;
   addSearchShortcut(keyword: string, name: string, searchURL: string): Promise<ActionResult>;
   removeSearchShortcut(keywordOrId: string): Promise<ActionResult>;
+  // Phase 3: Content mutation
+  createSpace(name: string, color?: string, icon?: string): Promise<ActionResult>;
+  createFolder(name: string, spaceId: string, parentFolderId?: string): Promise<ActionResult>;
+  addLink(url: string, spaceId: string, name?: string, folderId?: string, notes?: string): Promise<ActionResult>;
+  moveLink(linkId: string, targetSpaceId?: string, targetFolderId?: string | null): Promise<ActionResult>;
 }

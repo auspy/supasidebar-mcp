@@ -164,5 +164,33 @@ export function createBridgeClient(): BridgeClient {
       const body = isUUID ? { id: keywordOrId } : { keyword: keywordOrId };
       return request<ActionResult>("/search-shortcuts/remove", undefined, "POST", body);
     },
+
+    async createSpace(name: string, color?: string, icon?: string): Promise<ActionResult> {
+      const body: Record<string, unknown> = { name };
+      if (color) body.color = color;
+      if (icon) body.icon = icon;
+      return request<ActionResult>("/spaces", undefined, "POST", body);
+    },
+
+    async createFolder(name: string, spaceId: string, parentFolderId?: string): Promise<ActionResult> {
+      const body: Record<string, unknown> = { name, spaceId };
+      if (parentFolderId) body.parentFolderId = parentFolderId;
+      return request<ActionResult>("/folders", undefined, "POST", body);
+    },
+
+    async addLink(url: string, spaceId: string, name?: string, folderId?: string, notes?: string): Promise<ActionResult> {
+      const body: Record<string, unknown> = { url, spaceId };
+      if (name) body.name = name;
+      if (folderId) body.folderId = folderId;
+      if (notes) body.notes = notes;
+      return request<ActionResult>("/links", undefined, "POST", body);
+    },
+
+    async moveLink(linkId: string, targetSpaceId?: string, targetFolderId?: string | null): Promise<ActionResult> {
+      const body: Record<string, unknown> = { linkId };
+      if (targetSpaceId !== undefined) body.targetSpaceId = targetSpaceId;
+      if (targetFolderId !== undefined) body.targetFolderId = targetFolderId;
+      return request<ActionResult>("/links/move", undefined, "POST", body);
+    },
   };
 }

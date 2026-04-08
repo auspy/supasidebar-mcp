@@ -12,6 +12,7 @@ import { handleGetSettings, handleGetOneSetting, handleUpdateSetting, handleEnab
 import { handleGetShortcuts, handleUpdateShortcut, handleClearShortcut } from "./tools/shortcuts.js";
 import { handleGetGuide } from "./tools/guide.js";
 import { handleOpenLink, handleWebSearch, handleListSearchShortcuts, handleAddSearchShortcut, handleRemoveSearchShortcut } from "./tools/browser.js";
+import { handleCreateSpace, handleCreateFolder, handleAddLink, handleMoveLink } from "./tools/mutations.js";
 
 export function createServer(client: BridgeClient): McpServer {
   const server = new McpServer({
@@ -415,6 +416,78 @@ export function createServer(client: BridgeClient): McpServer {
       try {
         const text = await handleRemoveSearchShortcut(client, keyword);
         return { content: [{ type: "text", text }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  // --- Content mutation tools (Phase 3) ---
+
+  server.tool(
+    "create_space",
+    "Create a new space in SupaSidebar. Spaces are top-level collections that organize your links.",
+    {
+      name: z.string().describe("Name for the new space (e.g. 'Work', 'Side Projects')."),
+      color: z.string().optional().describe("Hex color for the space (e.g. '#3B82F6'). Defaults to blue."),
+      icon: z.string().optional().describe("SF Symbol name for the space icon (e.g. 'briefcase.fill', 'house.fill'). Defaults to 'folder'."),
+    },
+    async ({ name, color, icon }) => {
+      try {
+        return { content: [{ type: "text", text: await handleCreateSpace(client, name, color, icon) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "create_folder",
+    "Create a new folder inside a space. Use list_spaces for space IDs, list_folders for parent folder IDs.",
+    {
+      name: z.string().describe("Name for the new folder."),
+      spaceId: z.string().describe("The space ID to create the folder in. Get IDs from list_spaces."),
+      parentFolderId: z.string().optional().describe("ID of the parent folder for nesting. Omit for a root-level folder. Get IDs from list_folders."),
+    },
+    async ({ name, spaceId, parentFolderId }) => {
+      try {
+        return { content: [{ type: "text", text: await handleCreateFolder(client, name, spaceId, parentFolderId) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "add_link",
+    "Save a new link to SupaSidebar. If name is omitted, the title is fetched from the page automatically.",
+    {
+      url: z.string().describe("The URL to save (e.g. 'https://github.com')."),
+      spaceId: z.string().describe("The space ID to save the link into. Get IDs from list_spaces."),
+      name: z.string().optional().describe("Display name for the link. If omitted, SupaSidebar fetches the page title automatically."),
+      folderId: z.string().optional().describe("Folder ID to place the link in. Omit for unfiled. Get IDs from list_folders."),
+      notes: z.string().optional().describe("Optional notes to attach to the link."),
+    },
+    async ({ url, spaceId, name, folderId, notes }) => {
+      try {
+        return { content: [{ type: "text", text: await handleAddLink(client, url, spaceId, name, folderId, notes) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "move_link",
+    "Move an existing link to a different space or folder. Get link IDs from list_links or search. Pass targetFolderId as null to move to root (unfiled).",
+    {
+      linkId: z.string().describe("The link ID to move. Get IDs from list_links or search."),
+      targetSpaceId: z.string().optional().describe("Move the link to this space. Get IDs from list_spaces. Omit to keep in current space."),
+      targetFolderId: z.string().nullable().optional().describe("Move into this folder (get IDs from list_folders), or pass null to move to unfiled root. Omit to leave folder unchanged."),
+    },
+    async ({ linkId, targetSpaceId, targetFolderId }) => {
+      try {
+        return { content: [{ type: "text", text: await handleMoveLink(client, linkId, targetSpaceId, targetFolderId) }] };
       } catch (err) {
         return { content: [{ type: "text", text: (err as Error).message }], isError: true };
       }
