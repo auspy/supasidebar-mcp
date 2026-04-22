@@ -358,7 +358,7 @@ export function createServer(client: BridgeClient): McpServer {
 
   server.tool(
     "web_search",
-    "Search the web using a search engine or custom website shortcut. Built-in engines: Google, Bing, DuckDuckGo, Yahoo, Perplexity. Custom shortcuts let you search specific sites (e.g. YouTube, Reddit, GitHub). Use list_search_shortcuts to see all available.",
+    "Search the web using a search engine or custom website shortcut. Built-in engines: Google, Bing, DuckDuckGo, Yahoo, Perplexity, Brave, Kagi. Custom shortcuts let you search specific sites (e.g. YouTube, Reddit, GitHub). Use list_search_shortcuts to see all available.",
     {
       query: z.string().describe("The search query."),
       engine: z.string().optional().describe("Search engine or shortcut keyword (e.g. 'google', 'perplexity', 'yo' for YouTube, 'reddit'). Defaults to user's configured default engine."),
