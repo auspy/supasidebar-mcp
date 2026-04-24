@@ -2,7 +2,7 @@
 // Used for testing the MCP server without the SupaSidebar app running.
 // Activate with: --mock flag or SUPASIDEBAR_MCP_MOCK=1 env var.
 
-import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut } from "./types.js";
+import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut, ATCRule, ATCRuleInput, BrowserProfile } from "./types.js";
 
 const spaces: Space[] = [
   { id: "sp-1", name: "Work", color: "#3B82F6", icon: "briefcase", linkCount: 5, folderCount: 2, order: 0 },
@@ -148,6 +148,28 @@ const mockShortcuts: Shortcut[] = [
   { name: "addFinderFolder", title: "Add Current Folder", description: "Add current Finder folder to sidebar", category: "browser", key: "a", modifiers: ["command", "option"], displayString: "⌥⌘A" },
   { name: "saveAllBrowserTabs", title: "Save All Browser Tabs", description: "Save all open browser tabs to a new folder", category: "browser", key: "t", modifiers: ["command", "control"], displayString: "⌃⌘T" },
   { name: "openCurrentTabInOtherBrowser", title: "Open Tab in Other Browser", description: "Open the current browser tab in a different browser", category: "browser", key: "b", modifiers: ["command", "control"], displayString: "⌃⌘B" },
+];
+
+const mockATCRules: ATCRule[] = [
+  {
+    id: "atc-1", name: "GitHub to Work", routeType: "save", urlPattern: "github.com", matchType: "contains",
+    isEnabled: true, order: 0, targetSpaceID: "sp-1", openInBrowser: null, openInBrowserName: null,
+    openInProfileID: null, openInProfileName: null, sourceBrowser: null, sourceBrowserName: null,
+    sourceSpaceID: null, createdAt: "2026-01-01T00:00:00Z",
+  },
+  {
+    id: "atc-2", name: "Docs in Chrome", routeType: "open", urlPattern: "docs.google.com", matchType: "contains",
+    isEnabled: true, order: 1, targetSpaceID: null, openInBrowser: "com.google.Chrome", openInBrowserName: "Chrome",
+    openInProfileID: "com.google.Chrome:Default", openInProfileName: "Personal", sourceBrowser: null,
+    sourceBrowserName: null, sourceSpaceID: null, createdAt: "2026-01-02T00:00:00Z",
+  },
+];
+
+const mockBrowserProfiles: BrowserProfile[] = [
+  { id: "com.google.Chrome:Default", name: "Personal", browser: "com.google.Chrome", browserName: "Chrome", directory: "Default", isBrowserLevel: false },
+  { id: "com.google.Chrome:Profile 1", name: "Work", browser: "com.google.Chrome", browserName: "Chrome", directory: "Profile 1", isBrowserLevel: false },
+  { id: "com.apple.Safari:Work", name: "Work", browser: "com.apple.Safari", browserName: "Safari", directory: "Work", isBrowserLevel: false },
+  { id: "com.apple.Safari:__browser__", name: "Safari", browser: "com.apple.Safari", browserName: "Safari", directory: "", isBrowserLevel: true },
 ];
 
 let mockSidebarVisible = false;
@@ -338,6 +360,73 @@ export function createMockClient(): BridgeClient {
       if (targetSpaceId !== undefined) link.spaceId = targetSpaceId;
       if (targetFolderId !== undefined) link.folderId = targetFolderId;
       return { ok: true, id: linkId, newSpaceId: link.spaceId, newFolderId: link.folderId };
+    },
+
+    async listATCRules(): Promise<ATCRule[]> {
+      return mockATCRules;
+    },
+
+    async addATCRule(rule: ATCRuleInput): Promise<ActionResult> {
+      const id = `atc-${Date.now()}`;
+      const newRule: ATCRule = {
+        id,
+        name: rule.name ?? rule.urlPattern ?? "Untitled Rule",
+        routeType: rule.routeType,
+        urlPattern: rule.urlPattern ?? "",
+        matchType: rule.matchType ?? "contains",
+        isEnabled: rule.isEnabled ?? true,
+        order: mockATCRules.length,
+        targetSpaceID: rule.targetSpaceID ?? null,
+        openInBrowser: rule.openInBrowser ?? null,
+        openInBrowserName: null,
+        openInProfileID: rule.openInProfileID ?? null,
+        openInProfileName: null,
+        sourceBrowser: rule.sourceBrowser ?? null,
+        sourceBrowserName: null,
+        sourceSpaceID: rule.sourceSpaceID ?? null,
+        createdAt: new Date().toISOString(),
+      };
+      mockATCRules.push(newRule);
+      return { ok: true, id, name: newRule.name };
+    },
+
+    async updateATCRule(id: string, updates: Partial<ATCRuleInput>): Promise<ActionResult> {
+      const rule = mockATCRules.find((r) => r.id === id);
+      if (!rule) return { ok: false, error: `ATC rule not found: ${id}` };
+      if (updates.name !== undefined) rule.name = updates.name;
+      if (updates.urlPattern !== undefined) rule.urlPattern = updates.urlPattern;
+      if (updates.matchType !== undefined) rule.matchType = updates.matchType;
+      if (updates.isEnabled !== undefined) rule.isEnabled = updates.isEnabled;
+      if (updates.targetSpaceID !== undefined) rule.targetSpaceID = updates.targetSpaceID;
+      if (updates.openInBrowser !== undefined) rule.openInBrowser = updates.openInBrowser;
+      if (updates.openInProfileID !== undefined) rule.openInProfileID = updates.openInProfileID;
+      if (updates.sourceBrowser !== undefined) rule.sourceBrowser = updates.sourceBrowser;
+      if (updates.sourceSpaceID !== undefined) rule.sourceSpaceID = updates.sourceSpaceID;
+      return { ok: true, id, name: rule.name };
+    },
+
+    async deleteATCRule(id: string): Promise<ActionResult> {
+      const idx = mockATCRules.findIndex((r) => r.id === id);
+      if (idx === -1) return { ok: false, error: `ATC rule not found: ${id}` };
+      mockATCRules.splice(idx, 1);
+      return { ok: true, id };
+    },
+
+    async reorderATCRules(orderedIds: string[]): Promise<ActionResult> {
+      const reordered: ATCRule[] = [];
+      for (const id of orderedIds) {
+        const rule = mockATCRules.find((r) => r.id === id);
+        if (rule) reordered.push(rule);
+      }
+      const remaining = mockATCRules.filter((r) => !orderedIds.includes(r.id));
+      mockATCRules.length = 0;
+      mockATCRules.push(...reordered, ...remaining);
+      mockATCRules.forEach((r, i) => { r.order = i; });
+      return { ok: true, count: orderedIds.length };
+    },
+
+    async listBrowserProfiles(): Promise<BrowserProfile[]> {
+      return mockBrowserProfiles;
     },
   };
 }

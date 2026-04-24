@@ -45,6 +45,18 @@ It organizes everything into Spaces (workspaces) with Folders and Tags.
   switch_space          → Navigate to a different space
   open_preferences      → Open Preferences window (optionally to a specific tab)
 
+✈️ AIR TRAFFIC CONTROL (read + write)
+  list_atc_rules        → See all URL routing rules (save and open routes)
+  add_atc_rule          → Create a rule to route URLs to spaces or browsers/profiles
+  update_atc_rule       → Modify an existing rule (partial updates supported)
+  delete_atc_rule       → Remove a rule
+  reorder_atc_rules     → Change rule priority (first match wins)
+  list_browser_profiles → See available browser profiles for routing rules
+
+  ATC routes URLs automatically:
+    Save rules → When saving a link (Cmd+Ctrl+S), route it to a specific space
+    Open rules → When opening a link, open it in a specific browser/profile
+
 🌐 BROWSER & SEARCH
   open_link               → Open a URL in a specific browser (or default)
   web_search              → Search using any engine or custom website shortcut
@@ -110,6 +122,23 @@ It organizes everything into Spaces (workspaces) with Folders and Tags.
 "What search shortcuts do I have?"
   → list_search_shortcuts
 
+"Open x.com links in Safari Work profile"
+  → list_browser_profiles (to get the profile ID)
+  → add_atc_rule routeType="open" urlPattern="x.com" openInBrowser="Safari" openInProfileID="..."
+
+"Route GitHub links to my Work space"
+  → list_spaces (to get the space ID)
+  → add_atc_rule routeType="save" urlPattern="github.com" targetSpaceID="..."
+
+"Show me my ATC rules"
+  → list_atc_rules
+
+"What browser profiles do I have?"
+  → list_browser_profiles
+
+"Delete that ATC rule"
+  → list_atc_rules (to get the ID) → delete_atc_rule id="..."
+
 ═══════════════════════════════════════════
  SETTING CATEGORIES
 ═══════════════════════════════════════════
@@ -141,5 +170,13 @@ Use get_settings with a category to focus: get_settings category="sidebar"
 • Shortcuts need at least one modifier (command, shift, option, control).
   Use get_shortcuts to see the "name" field needed for update_shortcut.
 
-• Space IDs are UUIDs. Always call list_spaces first to get them.`;
+• Space IDs are UUIDs. Always call list_spaces first to get them.
+
+• ATC rules are evaluated top-to-bottom, first match wins.
+  Use list_browser_profiles to resolve profile names to IDs before creating open rules.
+  Browser names (e.g. "Safari", "Chrome") are accepted - no need for bundle IDs.
+
+• New rules are added at the top (highest priority). After creating a rule,
+  review other rules below - if the new rule is broad, it may shadow more
+  specific rules. Offer to reorder if needed.`;
 }

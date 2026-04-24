@@ -1,3 +1,6 @@
+// Tool registrations here must be kept in sync with:
+// - swiftapp/supasidebar/Managers/AI/CommandPanelAIChatManager.swift (in-app AI chat tool definitions)
+// - src/tools/guide.ts (AI-facing guide text)
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { BridgeClient } from "./bridge/types.js";
@@ -13,6 +16,7 @@ import { handleGetShortcuts, handleUpdateShortcut, handleClearShortcut } from ".
 import { handleGetGuide } from "./tools/guide.js";
 import { handleOpenLink, handleWebSearch, handleListSearchShortcuts, handleAddSearchShortcut, handleRemoveSearchShortcut } from "./tools/browser.js";
 import { handleCreateSpace, handleCreateFolder, handleAddLink, handleMoveLink } from "./tools/mutations.js";
+import { handleListATCRules, handleAddATCRule, handleUpdateATCRule, handleDeleteATCRule, handleReorderATCRules, handleListBrowserProfiles } from "./tools/atc.js";
 
 export function createServer(client: BridgeClient): McpServer {
   const server = new McpServer({
@@ -488,6 +492,112 @@ export function createServer(client: BridgeClient): McpServer {
     async ({ linkId, targetSpaceId, targetFolderId }) => {
       try {
         return { content: [{ type: "text", text: await handleMoveLink(client, linkId, targetSpaceId, targetFolderId) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  // --- Air Traffic Control ---
+
+  server.tool(
+    "list_atc_rules",
+    "List all Air Traffic Control (ATC) rules. ATC rules automatically route URLs to specific spaces (save rules) or browsers/profiles (open rules). Rules are evaluated top-to-bottom; first match wins.",
+    {},
+    async () => {
+      try {
+        return { content: [{ type: "text", text: await handleListATCRules(client) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "add_atc_rule",
+    "Create a new Air Traffic Control rule. Save rules route saved links to a specific space. Open rules open matching URLs in a specific browser/profile. Use list_browser_profiles to get profile IDs and list_spaces to get space IDs.",
+    {
+      routeType: z.enum(["save", "open"]).describe("'save': route saved links to a space. 'open': open matching URLs in a specific browser/profile."),
+      urlPattern: z.string().optional().describe("URL pattern to match (e.g. 'x.com', 'github.com'). Omit to match all URLs (only valid with sourceBrowser or sourceSpaceID)."),
+      matchType: z.enum(["contains", "equals"]).optional().describe("How to match. 'contains' (default): URL contains pattern. 'equals': exact match."),
+      name: z.string().optional().describe("Human-readable name for the rule."),
+      isEnabled: z.boolean().optional().describe("Whether rule is active. Defaults to true."),
+      targetSpaceID: z.string().optional().describe("[Save rules] Space ID to route saved links into. Get IDs from list_spaces."),
+      sourceBrowser: z.string().optional().describe("[Save rules] Only trigger when saving from this browser (e.g. 'Arc', 'Chrome')."),
+      openInBrowser: z.string().optional().describe("[Open rules] Browser to open URLs in (e.g. 'Chrome', 'Safari', 'Arc')."),
+      openInProfileID: z.string().optional().describe("[Open rules] Browser profile ID. Get IDs from list_browser_profiles."),
+      sourceSpaceID: z.string().optional().describe("[Open rules] Only trigger in this space. Get IDs from list_spaces."),
+    },
+    async ({ routeType, urlPattern, matchType, name, isEnabled, targetSpaceID, sourceBrowser, openInBrowser, openInProfileID, sourceSpaceID }) => {
+      try {
+        return { content: [{ type: "text", text: await handleAddATCRule(client, { routeType, urlPattern, matchType, name, isEnabled, targetSpaceID, sourceBrowser, openInBrowser, openInProfileID, sourceSpaceID }) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "update_atc_rule",
+    "Update an existing ATC rule. Only the fields you provide will be changed. Get rule IDs from list_atc_rules.",
+    {
+      id: z.string().describe("The ATC rule ID to update. Get IDs from list_atc_rules."),
+      name: z.string().optional().describe("New name for the rule."),
+      urlPattern: z.string().optional().describe("New URL pattern."),
+      matchType: z.enum(["contains", "equals"]).optional().describe("New match type."),
+      isEnabled: z.boolean().optional().describe("Enable or disable the rule."),
+      targetSpaceID: z.string().nullable().optional().describe("[Save rules] New target space ID. Set to null to clear."),
+      sourceBrowser: z.string().nullable().optional().describe("[Save rules] New source browser filter. Set to null to clear."),
+      openInBrowser: z.string().nullable().optional().describe("[Open rules] New target browser. Set to null to clear."),
+      openInProfileID: z.string().nullable().optional().describe("[Open rules] New profile ID. Set to null to clear."),
+      sourceSpaceID: z.string().nullable().optional().describe("[Open rules] New source space filter. Set to null to clear."),
+    },
+    async ({ id, ...updates }) => {
+      try {
+        return { content: [{ type: "text", text: await handleUpdateATCRule(client, id, updates) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "delete_atc_rule",
+    "Delete an ATC rule by ID. Get rule IDs from list_atc_rules.",
+    {
+      id: z.string().describe("The ATC rule ID to delete."),
+    },
+    async ({ id }) => {
+      try {
+        return { content: [{ type: "text", text: await handleDeleteATCRule(client, id) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "reorder_atc_rules",
+    "Change ATC rule priority order. Rules are evaluated top-to-bottom, first match wins. Provide all rule IDs in desired order.",
+    {
+      orderedIds: z.array(z.string()).describe("All ATC rule IDs in desired priority order (first = highest priority). Get IDs from list_atc_rules. Omitted rules go to the end."),
+    },
+    async ({ orderedIds }) => {
+      try {
+        return { content: [{ type: "text", text: await handleReorderATCRules(client, orderedIds) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "list_browser_profiles",
+    "List browser profiles discovered by SupaSidebar. Use this to get profile IDs for ATC rules that route URLs to a specific browser profile (e.g. 'Safari Work profile').",
+    {},
+    async () => {
+      try {
+        return { content: [{ type: "text", text: await handleListBrowserProfiles(client) }] };
       } catch (err) {
         return { content: [{ type: "text", text: (err as Error).message }], isError: true };
       }

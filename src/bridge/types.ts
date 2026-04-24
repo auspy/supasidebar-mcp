@@ -97,6 +97,47 @@ export interface SearchShortcut {
   id?: string;
 }
 
+export interface ATCRule {
+  id: string;
+  name: string;
+  routeType: "save" | "open";
+  urlPattern: string;
+  matchType: "contains" | "equals";
+  isEnabled: boolean;
+  order: number;
+  targetSpaceID: string | null;
+  openInBrowser: string | null;
+  openInBrowserName: string | null;
+  openInProfileID: string | null;
+  openInProfileName: string | null;
+  sourceBrowser: string | null;
+  sourceBrowserName: string | null;
+  sourceSpaceID: string | null;
+  createdAt: string;
+}
+
+export interface ATCRuleInput {
+  name?: string;
+  routeType: "save" | "open";
+  urlPattern?: string;
+  matchType?: "contains" | "equals";
+  isEnabled?: boolean;
+  targetSpaceID?: string | null;
+  openInBrowser?: string | null;
+  openInProfileID?: string | null;
+  sourceBrowser?: string | null;
+  sourceSpaceID?: string | null;
+}
+
+export interface BrowserProfile {
+  id: string;
+  name: string;
+  browser: string;
+  browserName: string;
+  directory: string;
+  isBrowserLevel: boolean;
+}
+
 export interface BridgeClient {
   getSpaces(): Promise<Space[]>;
   getLinks(spaceId: string, folderId?: string): Promise<Link[]>;
@@ -126,4 +167,11 @@ export interface BridgeClient {
   createFolder(name: string, spaceId: string, parentFolderId?: string): Promise<ActionResult>;
   addLink(url: string, spaceId: string, name?: string, folderId?: string, notes?: string): Promise<ActionResult>;
   moveLink(linkId: string, targetSpaceId?: string, targetFolderId?: string | null): Promise<ActionResult>;
+  // Phase 4: ATC Rules & Browser Profiles
+  listATCRules(): Promise<ATCRule[]>;
+  addATCRule(rule: ATCRuleInput): Promise<ActionResult>;
+  updateATCRule(id: string, updates: Partial<ATCRuleInput>): Promise<ActionResult>;
+  deleteATCRule(id: string): Promise<ActionResult>;
+  reorderATCRules(orderedIds: string[]): Promise<ActionResult>;
+  listBrowserProfiles(): Promise<BrowserProfile[]>;
 }

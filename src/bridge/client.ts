@@ -6,7 +6,7 @@
 // The SupaSidebar app runs a local HTTP server that this client talks to.
 // No data ever leaves your machine through this MCP server.
 
-import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut } from "./types.js";
+import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut, ATCRule, ATCRuleInput, BrowserProfile } from "./types.js";
 
 // Hardcoded. Not configurable. This is a trust decision.
 const BRIDGE_HOST = "127.0.0.1";
@@ -20,7 +20,7 @@ const APP_NOT_RUNNING =
 async function request<T>(
   path: string,
   params?: Record<string, string>,
-  method: "GET" | "POST" | "PUT" = "GET",
+  method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
   body?: Record<string, unknown>
 ): Promise<T> {
   const url = new URL(`${BASE_URL}${path}`);
@@ -191,6 +191,30 @@ export function createBridgeClient(): BridgeClient {
       if (targetSpaceId !== undefined) body.targetSpaceId = targetSpaceId;
       if (targetFolderId !== undefined) body.targetFolderId = targetFolderId;
       return request<ActionResult>("/links/move", undefined, "POST", body);
+    },
+
+    async listATCRules(): Promise<ATCRule[]> {
+      return request<ATCRule[]>("/atc/rules");
+    },
+
+    async addATCRule(rule: ATCRuleInput): Promise<ActionResult> {
+      return request<ActionResult>("/atc/rules", undefined, "POST", rule as unknown as Record<string, unknown>);
+    },
+
+    async updateATCRule(id: string, updates: Partial<ATCRuleInput>): Promise<ActionResult> {
+      return request<ActionResult>(`/atc/rules/${id}`, undefined, "PUT", updates as unknown as Record<string, unknown>);
+    },
+
+    async deleteATCRule(id: string): Promise<ActionResult> {
+      return request<ActionResult>(`/atc/rules/${id}`, undefined, "DELETE");
+    },
+
+    async reorderATCRules(orderedIds: string[]): Promise<ActionResult> {
+      return request<ActionResult>("/atc/rules/reorder", undefined, "POST", { orderedIds });
+    },
+
+    async listBrowserProfiles(): Promise<BrowserProfile[]> {
+      return request<BrowserProfile[]>("/browser-profiles");
     },
   };
 }
