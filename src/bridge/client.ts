@@ -14,8 +14,8 @@ const BRIDGE_PORT = 9847;
 const BASE_URL = `http://${BRIDGE_HOST}:${BRIDGE_PORT}/api/v1`;
 
 const APP_NOT_RUNNING =
-  "SupaSidebar is not running or its local API is not enabled. " +
-  "Please open SupaSidebar and ensure the MCP bridge is turned on in Preferences.";
+  "SupaSidebar MCP bridge is not reachable on 127.0.0.1:9847. " +
+  "Open SupaSidebar, then check Preferences > AI > MCP Connection for the bridge status and any startup error.";
 
 async function request<T>(
   path: string,

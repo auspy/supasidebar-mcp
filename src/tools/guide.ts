@@ -166,7 +166,6 @@ It organizes everything into Spaces (workspaces) with Folders and Tags.
   links            — Opening behavior, AI tags, pinned item shortcuts
   airTrafficControl — Auto-route links to spaces by URL patterns
   analytics        — Usage tracking
-  mcpBridge        — AI assistant connection (this)
 
 Use get_settings with a category to focus: get_settings category="sidebar"
 

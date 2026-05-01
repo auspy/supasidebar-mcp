@@ -248,7 +248,7 @@ export function createServer(client: BridgeClient): McpServer {
     "Get SupaSidebar settings. With no arguments: returns all 40+ settings grouped by category. With 'key': returns a single setting by exact key or natural-language alias (e.g. 'compact mode', 'smart attach', 'atc'). With 'category': filters to one group.",
     {
       key: z.string().optional().describe("A specific setting key (e.g. 'isCompactMode') or natural-language alias (e.g. 'compact mode', 'smart attach'). Returns just that one setting with full detail."),
-      category: z.string().optional().describe("Filter by category: sidebar, appearance, spaces, liveTabs, display, search, links, airTrafficControl, analytics, mcpBridge"),
+      category: z.string().optional().describe("Filter by category: sidebar, appearance, spaces, liveTabs, display, search, links, airTrafficControl, analytics"),
     },
     async ({ key, category }) => {
       try {

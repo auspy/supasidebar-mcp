@@ -197,12 +197,6 @@ const settingsMeta: Record<string, SettingMeta> = {
     aliases: ["analytics", "usage data", "telemetry", "tracking"],
   },
 
-  // ── MCP Bridge ──
-  mcpBridgeEnabled: {
-    description: "Enable the MCP bridge server for AI assistant integration (this is the connection you're using right now)",
-    aliases: ["mcp bridge", "ai bridge", "mcp server", "ai integration"],
-    note: "Disabling this will disconnect AI assistants from SupaSidebar",
-  },
 };
 
 // ── Features: multi-setting presets that map a single user intent to multiple settings ──
@@ -277,7 +271,7 @@ export async function handleGetSettings(client: BridgeClient, category?: string)
 
   if (settings.length === 0) {
     return category
-      ? `No settings found in category "${category}". Valid categories: sidebar, appearance, spaces, liveTabs, display, search, links, airTrafficControl, analytics, mcpBridge`
+      ? `No settings found in category "${category}". Valid categories: sidebar, appearance, spaces, liveTabs, display, search, links, airTrafficControl, analytics`
       : "No settings found.";
   }
 
@@ -299,7 +293,6 @@ export async function handleGetSettings(client: BridgeClient, category?: string)
     links: "Links",
     airTrafficControl: "Air Traffic Control",
     analytics: "Analytics",
-    mcpBridge: "MCP Bridge",
   };
 
   const sections: string[] = [];

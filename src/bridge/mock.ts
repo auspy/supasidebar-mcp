@@ -97,7 +97,6 @@ const mockSettingsState = new Map<string, boolean | string | number>([
   ["pinnedItemNumberShortcutsEnabled", true],
   ["atcEnabled", false],
   ["analyticsEnabled", true],
-  ["mcpBridgeEnabled", true],
 ]);
 
 const settingTypes: Record<string, "bool" | "string" | "number"> = {
@@ -115,7 +114,6 @@ const settingTypes: Record<string, "bool" | "string" | "number"> = {
   recentsEnabled: "bool", recentsDisplayLimit: "number", webSearchSuggestionsEnabled: "bool",
   defaultSearchEngine: "string", linkOpeningBehavior: "string", autoTagLinksEnabled: "bool",
   pinnedItemNumberShortcutsEnabled: "bool", atcEnabled: "bool", analyticsEnabled: "bool",
-  mcpBridgeEnabled: "bool",
 };
 
 const settingCategories: Record<string, string> = {
@@ -133,7 +131,7 @@ const settingCategories: Record<string, string> = {
   recentsEnabled: "display", recentsDisplayLimit: "display", webSearchSuggestionsEnabled: "search",
   defaultSearchEngine: "search", linkOpeningBehavior: "links", autoTagLinksEnabled: "links",
   pinnedItemNumberShortcutsEnabled: "links", atcEnabled: "airTrafficControl",
-  analyticsEnabled: "analytics", mcpBridgeEnabled: "mcpBridge",
+  analyticsEnabled: "analytics",
 };
 
 const mockShortcuts: Shortcut[] = [
