@@ -211,8 +211,18 @@ export function createMockClient(): BridgeClient {
       return browserTabs;
     },
 
-    async getRecent(limit = 10) {
-      return recentItems.slice(0, limit);
+    async getRecent(opts?: { limit?: number; offset?: number; since?: string; until?: string }) {
+      const limit = opts?.limit ?? 50;
+      const offset = opts?.offset ?? 0;
+      const sinceMs = opts?.since ? Date.parse(opts.since) : undefined;
+      const untilMs = opts?.until ? Date.parse(opts.until) : undefined;
+      const filtered = recentItems.filter((item) => {
+        const ts = Date.parse(item.openedAt);
+        if (sinceMs !== undefined && ts < sinceMs) return false;
+        if (untilMs !== undefined && ts >= untilMs) return false;
+        return true;
+      });
+      return filtered.slice(offset, offset + limit);
     },
 
     async toggleSidebar(): Promise<ToggleResult> {
@@ -279,8 +289,8 @@ export function createMockClient(): BridgeClient {
       return { sidebar: mockSidebarVisible, commandPanel: false };
     },
 
-    async openLink(url: string, browser?: string): Promise<ActionResult> {
-      return { ok: true, url, browser: browser ?? "default" };
+    async openLink(url: string, browser?: string, profileId?: string): Promise<ActionResult> {
+      return { ok: true, url, browser: browser ?? "default", profile: profileId };
     },
 
     async webSearch(query: string, engine?: string, browser?: string): Promise<ActionResult> {
@@ -427,6 +437,14 @@ export function createMockClient(): BridgeClient {
 
     async listBrowserProfiles(): Promise<BrowserProfile[]> {
       return mockBrowserProfiles;
+    },
+
+    async listInstalledBrowsers() {
+      return [
+        { name: "Safari", appName: "Safari", bundleId: "com.apple.Safari", isRunning: true, isDefault: true },
+        { name: "Chrome", appName: "Google Chrome", bundleId: "com.google.Chrome", isRunning: true, isDefault: false },
+        { name: "Arc", appName: "Arc", bundleId: "company.thebrowser.Browser", isRunning: false, isDefault: false },
+      ];
     },
   };
 }

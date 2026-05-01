@@ -138,6 +138,14 @@ export interface BrowserProfile {
   isBrowserLevel: boolean;
 }
 
+export interface InstalledBrowser {
+  name: string;
+  appName: string;
+  bundleId: string;
+  isRunning: boolean;
+  isDefault: boolean;
+}
+
 export interface BridgeClient {
   getSpaces(): Promise<Space[]>;
   getLinks(spaceId: string, folderId?: string): Promise<Link[]>;
@@ -145,7 +153,7 @@ export interface BridgeClient {
   getFolders(spaceId: string): Promise<Folder[]>;
   getTags(): Promise<Tag[]>;
   getLiveTabs(browser?: string): Promise<BrowserTab[]>;
-  getRecent(limit?: number): Promise<RecentItem[]>;
+  getRecent(opts?: { limit?: number; offset?: number; since?: string; until?: string }): Promise<RecentItem[]>;
   toggleSidebar(): Promise<ToggleResult>;
   // Phase 2: Settings & configuration
   getSettings(category?: string): Promise<Setting[]>;
@@ -157,7 +165,7 @@ export interface BridgeClient {
   openPreferences(tab?: string): Promise<ActionResult>;
   toggleCommandPanel(): Promise<ToggleResult>;
   getVisibility(): Promise<{ sidebar: boolean; commandPanel: boolean }>;
-  openLink(url: string, browser?: string): Promise<ActionResult>;
+  openLink(url: string, browser?: string, profileId?: string): Promise<ActionResult>;
   webSearch(query: string, engine?: string, browser?: string): Promise<ActionResult>;
   listSearchShortcuts(): Promise<SearchShortcut[]>;
   addSearchShortcut(keyword: string, name: string, searchURL: string): Promise<ActionResult>;
@@ -174,4 +182,5 @@ export interface BridgeClient {
   deleteATCRule(id: string): Promise<ActionResult>;
   reorderATCRules(orderedIds: string[]): Promise<ActionResult>;
   listBrowserProfiles(): Promise<BrowserProfile[]>;
+  listInstalledBrowsers(): Promise<InstalledBrowser[]>;
 }

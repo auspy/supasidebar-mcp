@@ -19,7 +19,7 @@ It organizes everything into Spaces (workspaces) with Folders and Tags.
   list_tags           → See all tags sorted by usage
   search              → Fuzzy search links by name, URL, notes, or tags
   get_live_tabs       → See currently open browser tabs (filter by browser)
-  list_recent         → See recently opened links
+  list_recent         → See recently opened links (supports day/since/until/offset/limit; default limit 50)
 
 ⚙️ SETTINGS (read + write)
   get_settings        → See all 40+ settings with values, descriptions, and aliases
@@ -51,14 +51,15 @@ It organizes everything into Spaces (workspaces) with Folders and Tags.
   update_atc_rule       → Modify an existing rule (partial updates supported)
   delete_atc_rule       → Remove a rule
   reorder_atc_rules     → Change rule priority (first match wins)
-  list_browser_profiles → See available browser profiles for routing rules
+  list_browser_profiles    → See available browser profiles for routing rules
+  list_installed_browsers  → See which browsers are actually installed on this machine
 
   ATC routes URLs automatically:
     Save rules → When saving a link (Cmd+Ctrl+S), route it to a specific space
     Open rules → When opening a link, open it in a specific browser/profile
 
 🌐 BROWSER & SEARCH
-  open_link               → Open a URL in a specific browser (or default)
+  open_link               → Open a URL in a specific browser, browser profile, or default
   web_search              → Search using any engine or custom website shortcut
   list_search_shortcuts   → See all available engines + custom shortcuts
   add_search_shortcut     → Add a custom website search (e.g. GitHub, Stack Overflow)
@@ -109,6 +110,19 @@ It organizes everything into Spaces (workspaces) with Folders and Tags.
 
 "Open GitHub in Arc"
   → open_link url="https://github.com" browser="Arc"
+  (Always pass the browser parameter when the user names one - omitting it falls back to the system default browser, which is usually wrong.)
+
+"Open this in my Brave Work profile"
+  → list_browser_profiles (find the matching profile ID)
+  → open_link url="..." profileId="com.brave.Browser:Profile 2"
+
+"What did I open yesterday?" / "...on April 28?"
+  → list_recent day="yesterday"
+  → list_recent day="2026-04-28" limit=200
+
+"Find a link I opened last week - I forget the name"
+  → list_recent since="2026-04-21" until="2026-04-28" limit=500
+  (Then page back with offset if needed. Don't give up after the first 50.)
 
 "Search YouTube for Swift tutorials"
   → web_search query="Swift tutorials" engine="yo"
@@ -178,5 +192,23 @@ Use get_settings with a category to focus: get_settings category="sidebar"
 
 • New rules are added at the top (highest priority). After creating a rule,
   review other rules below - if the new rule is broad, it may shadow more
-  specific rules. Offer to reorder if needed.`;
+  specific rules. Offer to reorder if needed.
+
+• list_recent: the default limit (50) is small relative to a power user's
+  history. If a link doesn't show up, don't conclude it isn't there — try:
+    1. day="YYYY-MM-DD" (or "today"/"yesterday") to scope by day,
+    2. since/until for a multi-day range,
+    3. higher limit (up to 1000) and/or offset to paginate.
+  Searching by day is almost always faster than scrolling.
+
+• open_link: ALWAYS pass the browser parameter when the user names a browser.
+  Omitting it falls back to the system default browser (e.g. Safari), which
+  is usually NOT what the user asked for. For profile-specific opens, call
+  list_browser_profiles first and pass the resulting profileId.
+
+• Recognized vs installed browsers: open_link recognizes 14 browser names but
+  only some are actually installed on a given machine. If you get an error
+  like "Brave is not installed", call list_installed_browsers and pick from
+  that list - that's the source of truth. The 'name' field returned by
+  list_installed_browsers is the exact string to pass as the browser param.`;
 }

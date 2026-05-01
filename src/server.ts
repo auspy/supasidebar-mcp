@@ -16,7 +16,7 @@ import { handleGetShortcuts, handleUpdateShortcut, handleClearShortcut } from ".
 import { handleGetGuide } from "./tools/guide.js";
 import { handleOpenLink, handleWebSearch, handleListSearchShortcuts, handleAddSearchShortcut, handleRemoveSearchShortcut } from "./tools/browser.js";
 import { handleCreateSpace, handleCreateFolder, handleAddLink, handleMoveLink } from "./tools/mutations.js";
-import { handleListATCRules, handleAddATCRule, handleUpdateATCRule, handleDeleteATCRule, handleReorderATCRules, handleListBrowserProfiles } from "./tools/atc.js";
+import { handleListATCRules, handleAddATCRule, handleUpdateATCRule, handleDeleteATCRule, handleReorderATCRules, handleListBrowserProfiles, handleListInstalledBrowsers } from "./tools/atc.js";
 
 export function createServer(client: BridgeClient): McpServer {
   const server = new McpServer({
@@ -133,13 +133,17 @@ export function createServer(client: BridgeClient): McpServer {
 
   server.tool(
     "list_recent",
-    "List recently opened links, ordered by most recent first.",
+    "List recently opened links, ordered by most recent first. If you don't see what the user wants in the first call, do NOT give up — increase `limit` (the default of 50 is small relative to a power user's history), page back with `offset`, or narrow with `day`/`since`/`until`. To find what someone opened on a specific day, prefer `day=\"YYYY-MM-DD\"` (or `\"today\"`/`\"yesterday\"`) over scrolling. Combine `day` with a higher `limit` to see everything from that day.",
     {
-      limit: z.number().optional().describe("Max results to return (default: 10)."),
+      limit: z.number().optional().describe("Max results to return (default: 50, max: 1000). Increase this before assuming a link isn't there."),
+      offset: z.number().optional().describe("Skip the first N items. Use to paginate when limit is exhausted."),
+      day: z.string().optional().describe("Filter to a single day. Accepts 'today', 'yesterday', or 'YYYY-MM-DD' (e.g. '2026-04-30'). Sets since/until automatically."),
+      since: z.string().optional().describe("Only links opened at or after this time. ISO-8601 datetime ('2026-04-28T00:00:00Z') or bare 'YYYY-MM-DD'. Ignored if `day` is set."),
+      until: z.string().optional().describe("Only links opened before this time. ISO-8601 datetime or bare 'YYYY-MM-DD' (treated as end-of-day). Ignored if `day` is set."),
     },
-    async ({ limit }) => {
+    async ({ limit, offset, day, since, until }) => {
       try {
-        const text = await handleListRecent(client, limit);
+        const text = await handleListRecent(client, { limit, offset, day, since, until });
         return { content: [{ type: "text", text }] };
       } catch (err) {
         return { content: [{ type: "text", text: (err as Error).message }], isError: true };
@@ -345,14 +349,15 @@ export function createServer(client: BridgeClient): McpServer {
 
   server.tool(
     "open_link",
-    "Open a URL in a specific browser or the default browser. Supports 14 browsers: Safari, Chrome, Firefox, Edge, Arc, Brave, Vivaldi, Dia, Comet, Orion, Zen, Atlas, Wavebox, Helium.",
+    "Open a URL in a specific browser, browser profile, or the default browser. IMPORTANT: if the user names a browser ('open in Brave', 'in my Work profile'), you MUST set the `browser` (and `profileId`) parameter - omitting it falls back to the system default browser, which is usually NOT what was asked for. Supported browsers (Safari, Chrome, Firefox, Edge, Arc, Brave, Vivaldi, Dia, Comet, Orion, Zen, Atlas, Wavebox, Helium) are RECOGNIZED but not necessarily INSTALLED on this user's machine - if `open_link` returns an 'is not installed' error, call `list_installed_browsers` to see what's actually available and pick from those. For profile-specific opening, call `list_browser_profiles` first to get profile IDs.",
     {
       url: z.string().describe("The URL to open (e.g. 'https://github.com')."),
-      browser: z.string().optional().describe("Browser to open in (e.g. 'Chrome', 'Arc', 'Safari'). Omit for default browser."),
+      browser: z.string().optional().describe("Browser to open in (e.g. 'Chrome', 'Arc', 'Safari', 'Brave'). REQUIRED when the user names a browser. Omit only when the user did not specify."),
+      profileId: z.string().optional().describe("Open in a specific browser profile. Get IDs from list_browser_profiles (format: '<bundleId>:<directory>', e.g. 'com.brave.Browser:Default'). If set without `browser`, the browser is inferred from the profile ID."),
     },
-    async ({ url, browser }) => {
+    async ({ url, browser, profileId }) => {
       try {
-        const text = await handleOpenLink(client, url, browser);
+        const text = await handleOpenLink(client, url, browser, profileId);
         return { content: [{ type: "text", text }] };
       } catch (err) {
         return { content: [{ type: "text", text: (err as Error).message }], isError: true };
@@ -598,6 +603,19 @@ export function createServer(client: BridgeClient): McpServer {
     async () => {
       try {
         return { content: [{ type: "text", text: await handleListBrowserProfiles(client) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "list_installed_browsers",
+    "List browsers actually installed on this machine. Call this BEFORE open_link if you're not sure whether a browser the user named is available - the static list of 14 supported browsers does not mean all 14 are installed. Returns each browser's name (the exact string to pass to open_link's `browser` param), whether it's running, and which is the system default.",
+    {},
+    async () => {
+      try {
+        return { content: [{ type: "text", text: await handleListInstalledBrowsers(client) }] };
       } catch (err) {
         return { content: [{ type: "text", text: (err as Error).message }], isError: true };
       }

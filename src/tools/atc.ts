@@ -87,3 +87,24 @@ export async function handleListBrowserProfiles(client: BridgeClient): Promise<s
   }
   return `Browser profiles:\n\n${lines.join("\n")}\n\nUse the profile id in add_atc_rule or update_atc_rule as openInProfileID.`;
 }
+
+export async function handleListInstalledBrowsers(client: BridgeClient): Promise<string> {
+  const browsers = await client.listInstalledBrowsers();
+  if (browsers.length === 0) {
+    return "No supported browsers detected on this machine.";
+  }
+  const lines = browsers.map((b) => {
+    const tags: string[] = [];
+    if (b.isDefault) tags.push("default");
+    if (b.isRunning) tags.push("running");
+    const tagSuffix = tags.length > 0 ? `  [${tags.join(", ")}]` : "";
+    return `  - ${b.name}${tagSuffix}`;
+  });
+  return [
+    `${browsers.length} browser${browsers.length === 1 ? "" : "s"} installed on this machine:`,
+    "",
+    lines.join("\n"),
+    "",
+    "Pass exactly the `name` value (e.g. \"Brave\", \"Arc\") to open_link's `browser` parameter. Browsers not in this list are NOT installed and will fail.",
+  ].join("\n");
+}

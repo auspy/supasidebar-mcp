@@ -6,7 +6,7 @@
 // The SupaSidebar app runs a local HTTP server that this client talks to.
 // No data ever leaves your machine through this MCP server.
 
-import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut, ATCRule, ATCRuleInput, BrowserProfile } from "./types.js";
+import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut, ATCRule, ATCRuleInput, BrowserProfile, InstalledBrowser } from "./types.js";
 
 // Hardcoded. Not configurable. This is a trust decision.
 const BRIDGE_HOST = "127.0.0.1";
@@ -51,7 +51,21 @@ async function request<T>(
 
   if (!response.ok) {
     const body = await response.text().catch(() => "");
-    throw new Error(`SupaSidebar API error (${response.status}): ${body || response.statusText}`);
+    // Swift handlers return {"error": "..."} on 4xx/5xx — surface the inner
+    // message directly so the LLM sees the specific reason ("Brave is not
+    // installed...") instead of "API error (400): {\"error\":\"...\"}".
+    let detail = body || response.statusText;
+    if (body) {
+      try {
+        const parsed = JSON.parse(body);
+        if (parsed && typeof parsed === "object" && typeof parsed.error === "string") {
+          detail = parsed.error;
+        }
+      } catch {
+        // body wasn't JSON — fall through to raw text
+      }
+    }
+    throw new Error(`SupaSidebar (${response.status}): ${detail}`);
   }
 
   return response.json() as Promise<T>;
@@ -89,9 +103,12 @@ export function createBridgeClient(): BridgeClient {
       return request<BrowserTab[]>("/tabs", params);
     },
 
-    async getRecent(limit?: number): Promise<RecentItem[]> {
+    async getRecent(opts?: { limit?: number; offset?: number; since?: string; until?: string }): Promise<RecentItem[]> {
       const params: Record<string, string> = {};
-      if (limit) params.limit = String(limit);
+      if (opts?.limit !== undefined) params.limit = String(opts.limit);
+      if (opts?.offset !== undefined) params.offset = String(opts.offset);
+      if (opts?.since) params.since = opts.since;
+      if (opts?.until) params.until = opts.until;
       return request<RecentItem[]>("/recent", params);
     },
 
@@ -137,9 +154,10 @@ export function createBridgeClient(): BridgeClient {
       return request<{ sidebar: boolean; commandPanel: boolean }>("/visibility");
     },
 
-    async openLink(url: string, browser?: string): Promise<ActionResult> {
+    async openLink(url: string, browser?: string, profileId?: string): Promise<ActionResult> {
       const body: Record<string, unknown> = { url };
       if (browser) body.browser = browser;
+      if (profileId) body.profileId = profileId;
       return request<ActionResult>("/actions/open-link", undefined, "POST", body);
     },
 
@@ -215,6 +233,10 @@ export function createBridgeClient(): BridgeClient {
 
     async listBrowserProfiles(): Promise<BrowserProfile[]> {
       return request<BrowserProfile[]>("/browser-profiles");
+    },
+
+    async listInstalledBrowsers(): Promise<InstalledBrowser[]> {
+      return request<InstalledBrowser[]>("/installed-browsers");
     },
   };
 }

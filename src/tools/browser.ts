@@ -5,13 +5,19 @@ const BROWSERS = [
   "Vivaldi", "Dia", "Comet", "Orion", "Zen", "Atlas", "Wavebox", "Helium",
 ];
 
-export async function handleOpenLink(client: BridgeClient, url: string, browser?: string): Promise<string> {
-  const result = await client.openLink(url, browser);
+export async function handleOpenLink(
+  client: BridgeClient,
+  url: string,
+  browser?: string,
+  profileId?: string
+): Promise<string> {
+  const result = await client.openLink(url, browser, profileId);
   if (!result.ok) {
     throw new Error(result.error ?? `Failed to open ${url}`);
   }
   const where = result.browser === "default" ? "default browser" : result.browser;
-  return `Opened ${url} in ${where}.`;
+  const profileSuffix = result.profile ? ` (profile: ${result.profile})` : "";
+  return `Opened ${url} in ${where}${profileSuffix}.`;
 }
 
 export async function handleWebSearch(
