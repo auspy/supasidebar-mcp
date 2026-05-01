@@ -65,7 +65,7 @@ Add to `.cursor/mcp.json`:
 
 > **Troubleshooting:** If you see "Failed to spawn process", you likely use a Node version manager (fnm, nvm, volta). Replace the command with `"/bin/zsh"` and args with `["-lc", "npx -y supasidebar-mcp"]` to load your shell profile.
 
-## Available tools (35)
+## Available tools (36)
 
 ### Browse and search
 
@@ -75,10 +75,11 @@ Add to `.cursor/mcp.json`:
 | `list_spaces` | List all spaces |
 | `list_links` | List links in a space or folder |
 | `list_folders` | List folders in a space |
-| `list_recent` | List recently opened links |
+| `list_recent` | List recently opened links, with pagination and date filters |
 | `list_tags` | List all tags with usage counts |
 | `get_live_tabs` | Get currently open browser tabs, optionally filtered by browser |
 | `list_browser_profiles` | List browser profiles across all supported browsers |
+| `list_installed_browsers` | List supported browsers actually installed on this machine |
 
 ### Create and organize
 
@@ -93,7 +94,7 @@ Add to `.cursor/mcp.json`:
 
 | Tool | Description |
 |------|-------------|
-| `open_link` | Open a URL in a specific browser or the default |
+| `open_link` | Open a URL in a specific browser, browser profile, or the default |
 | `switch_space` | Switch to a different space |
 | `toggle_sidebar` | Show or hide the sidebar |
 | `toggle_command_panel` | Open or close the command panel |
