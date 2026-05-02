@@ -2,7 +2,7 @@
 
 Let AI assistants interact with your [SupaSidebar](https://supasidebar.com) bookmarks, spaces, tabs, and more.
 
-Works with Claude Code, Claude Desktop, Cursor, VS Code Copilot, and any MCP-compatible client.
+Works with Claude Code, Claude Desktop, Cursor, Codex, VS Code Copilot, and any MCP-compatible client.
 
 **Docs**: [docs.supasidebar.com/features/mcp](https://docs.supasidebar.com/features/mcp)
 
@@ -38,9 +38,9 @@ If `npx` isn't found, install Node. Pick whichever you prefer:
   ```bash
   brew install node
   ```
-- **Without Homebrew** — download the LTS installer from [nodejs.org/en/download](https://nodejs.org/en/download) and run it. The macOS `.pkg` installer puts `node` and `npx` on your PATH automatically; just restart your terminal afterwards.
+- **Without Homebrew** - download the LTS installer from [nodejs.org/en/download](https://nodejs.org/en/download) and run it. The macOS `.pkg` installer puts `node` and `npx` on your PATH automatically; just restart your terminal afterwards.
 
-The SupaSidebar app must be running — the MCP server talks to its local bridge API at `127.0.0.1:9847`.
+The SupaSidebar app must be running - the MCP server talks to its local bridge API at `127.0.0.1:9847`.
 
 **Compatibility:** `supasidebar-mcp@0.2.2` requires **SupaSidebar app 0.17.2 or later**. Older app versions are missing bridge endpoints used by some of the 36 tools.
 
@@ -48,9 +48,9 @@ The SupaSidebar app must be running — the MCP server talks to its local bridge
 
 SupaSidebar needs two macOS permissions for the MCP tools to work end-to-end (especially anything touching browsers, tabs, or windows). Open the relevant pane in **System Settings → Privacy & Security**:
 
-- **Accessibility** — required for window/sidebar control, global shortcuts, and tab management.
+- **Accessibility** - required for window/sidebar control, global shortcuts, and tab management.
   Open: [Privacy & Security → Accessibility](x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility)
-- **Automation** — required for browser integration (read live tabs, open URLs in specific browsers/profiles via AppleScript).
+- **Automation** - required for browser integration (read live tabs, open URLs in specific browsers/profiles via AppleScript).
   Open: [Privacy & Security → Automation](x-apple.systempreferences:com.apple.preference.security?Privacy_Automation)
 
 Make sure **SupaSidebar** is checked in both panes. If you grant a permission while the app is running, quit and relaunch SupaSidebar so it picks up the new permission.
@@ -125,6 +125,16 @@ Add to `.cursor/mcp.json`:
 }
 ```
 
+### Codex
+
+1. Make sure Codex CLI is installed and SupaSidebar is running
+2. Register the MCP server:
+   ```bash
+   codex mcp add supasidebar -- npx -y supasidebar-mcp
+   ```
+3. Verify with `codex mcp list` and `codex mcp get supasidebar`
+4. Inside a Codex session, ask the agent to *"list every SupaSidebar tool you have access to - there should be at least 35"* to confirm all tools are wired up. Codex's `/mcp` panel sometimes under-reports, but the tools are still callable - see [Troubleshooting](#troubleshooting) below.
+
 ## Troubleshooting
 
 **`npx: command not found` / `command failed: npx`**
@@ -151,9 +161,9 @@ If you use a Node version manager (fnm, nvm, volta), the AI client may not see y
 ```
 
 **Codex's `/mcp` panel shows fewer tools than expected**
-Known display bug ([openai/codex#17021](https://github.com/openai/codex/issues/17021)) — Codex CLI's `/mcp` view under-reports MCP tools, even though all of them are registered and callable. To verify what's actually available, ask the agent directly with a prompt like:
+Known display bug ([openai/codex#17021](https://github.com/openai/codex/issues/17021)) - Codex CLI's `/mcp` view under-reports MCP tools, even though all of them are registered and callable. To verify what's actually available, ask the agent directly with a prompt like:
 
-> List every SupaSidebar tool you have access to — there should be at least 35.
+> List every SupaSidebar tool you have access to - there should be at least 35.
 
 If Codex returns fewer, fall back to the MCP Inspector below for the ground truth.
 
@@ -161,13 +171,13 @@ If Codex returns fewer, fall back to the MCP Inspector below for the ground trut
 
 Different clients show different views of MCP tools, and some (notably Codex) under-report what's actually registered. Use one of these to see the ground truth:
 
-- **Inside Claude Code:** type `/mcp` — reliably lists each connected server and its tool count.
-- **Inside Codex:** type `/mcp` (often under-reports — see entry above; prefer asking the agent or using the Inspector).
-- **Universal — MCP Inspector** (works without any AI client; spins up a local web UI):
+- **Inside Claude Code:** type `/mcp` - reliably lists each connected server and its tool count.
+- **Inside Codex:** type `/mcp` (often under-reports - see entry above; prefer asking the agent or using the Inspector).
+- **Universal - MCP Inspector** (works without any AI client; spins up a local web UI):
   ```bash
   npx @modelcontextprotocol/inspector npx -y supasidebar-mcp
   ```
-  Open the printed URL in a browser, click "Connect", then "List Tools" — you'll see all 36 tools with their schemas and can test-call any of them. This is the fastest way to confirm whether a tool-count problem is in the server or in the client.
+  Open the printed URL in a browser, click "Connect", then "List Tools" - you'll see all 36 tools with their schemas and can test-call any of them. This is the fastest way to confirm whether a tool-count problem is in the server or in the client.
 
 ## Available tools (36)
 
@@ -179,7 +189,7 @@ Different clients show different views of MCP tools, and some (notably Codex) un
 | `list_spaces` | List all spaces (top-level collections) |
 | `list_links` | List links in a space or folder, with names, URLs, tags, and notes |
 | `list_folders` | List folders inside a space |
-| `list_recent` | Recently opened links — paginate with `limit`/`offset`, filter with `day`/`since`/`until` |
+| `list_recent` | Recently opened links - paginate with `limit`/`offset`, filter with `day`/`since`/`until` |
 | `list_tags` | List all tags, sorted by usage count |
 | `get_live_tabs` | Get currently open browser tabs, optionally filtered by browser |
 | `list_browser_profiles` | List browser profiles discovered by SupaSidebar (for use with `open_link` and ATC rules) |
