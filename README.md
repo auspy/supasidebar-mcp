@@ -23,15 +23,75 @@ The MCP server is a thin bridge. It translates AI tool calls into local HTTP req
 3. **Zero telemetry** - no analytics, no tracking, no usage reporting.
 4. **One runtime dependency** - `@modelcontextprotocol/sdk` (the protocol library).
 
-**Don't trust us - read the code.** The bridge client is ~60 lines in [`src/bridge/client.ts`](src/bridge/client.ts).
+## Prerequisites
+
+You need **Node.js 18 or newer** (which provides `npx`). Check with:
+
+```bash
+node --version    # should print v18.x or higher
+npx --version     # should print a version number, not "command not found"
+```
+
+If `npx` isn't found, install Node. Pick whichever you prefer:
+
+- **With Homebrew** (easiest if you already have `brew`):
+  ```bash
+  brew install node
+  ```
+- **Without Homebrew** — download the LTS installer from [nodejs.org/en/download](https://nodejs.org/en/download) and run it. The macOS `.pkg` installer puts `node` and `npx` on your PATH automatically; just restart your terminal afterwards.
+
+The SupaSidebar app must also be running (the MCP server talks to it on `127.0.0.1:9847`).
+
+### macOS permissions
+
+SupaSidebar needs two macOS permissions for the MCP tools to work end-to-end (especially anything touching browsers, tabs, or windows). Open the relevant pane in **System Settings → Privacy & Security**:
+
+- **Accessibility** — required for window/sidebar control, global shortcuts, and tab management.
+  Open: [Privacy & Security → Accessibility](x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility)
+- **Automation** — required for browser integration (read live tabs, open URLs in specific browsers/profiles via AppleScript).
+  Open: [Privacy & Security → Automation](x-apple.systempreferences:com.apple.preference.security?Privacy_Automation)
+
+Make sure **SupaSidebar** is checked in both panes. If you grant a permission while the app is running, quit and relaunch SupaSidebar so it picks up the new permission.
 
 ## Setup
 
 ### Claude Code
 
+The recommended way - register at user scope so it's available in every project:
+
 ```bash
-claude mcp add supasidebar -- npx -y supasidebar-mcp
+claude mcp add -s user supasidebar -- npx -y supasidebar-mcp
 ```
+
+Verify it registered:
+
+```bash
+claude mcp list
+# expected: supasidebar    ✓ Connected
+```
+
+Inside a session, `/mcp` shows connected servers and tool counts.
+
+> **Just for one project?** Drop `-s user`:
+> ```bash
+> claude mcp add supasidebar -- npx -y supasidebar-mcp
+> ```
+
+> **⚠️ Do not put MCP config in `~/.claude/settings.json`.** That file is for hooks, permissions, and env vars only - Claude Code silently ignores unknown keys there, so the server appears to "register" but no tools will load. The correct location is `~/.claude.json` under `mcpServers` (which `claude mcp add` writes to automatically).
+
+> **Prefer to hand-edit?** Add to `~/.claude.json` (note: `.claude.json`, not `.claude/settings.json`):
+> ```json
+> {
+>   "mcpServers": {
+>     "supasidebar": {
+>       "type": "stdio",
+>       "command": "npx",
+>       "args": ["-y", "supasidebar-mcp"]
+>     }
+>   }
+> }
+> ```
+> Restart Claude Code after editing.
 
 ### Claude Desktop
 
@@ -63,7 +123,49 @@ Add to `.cursor/mcp.json`:
 }
 ```
 
-> **Troubleshooting:** If you see "Failed to spawn process", you likely use a Node version manager (fnm, nvm, volta). Replace the command with `"/bin/zsh"` and args with `["-lc", "npx -y supasidebar-mcp"]` to load your shell profile.
+## Troubleshooting
+
+**`npx: command not found` / `command failed: npx`**
+You don't have Node installed. Either run `brew install node`, or download the LTS installer from [nodejs.org/en/download](https://nodejs.org/en/download) if you don't use Homebrew. Restart your terminal and AI client afterwards.
+
+**Tools don't appear in Claude Code (`mcp__supasidebar__*` missing)**
+- Run `claude mcp list` - if `supasidebar` isn't there, registration failed. Re-run the `claude mcp add` command above.
+- Confirm config is in `~/.claude.json`, **not** `~/.claude/settings.json`.
+- Restart Claude Code after any MCP change - servers are spawned once at session start.
+- For verbose handshake logs: `claude --mcp-debug`.
+
+**"Failed to connect to SupaSidebar" / `fetch failed`**
+The MCP server can't reach the SupaSidebar app. Make sure SupaSidebar is running, then check the bridge:
+```bash
+curl http://127.0.0.1:9847/api/v1/health
+# expected: {"app":"SupaSidebar","status":"ok",...}
+```
+
+**"Failed to spawn process" (Cursor / version managers)**
+If you use a Node version manager (fnm, nvm, volta), the AI client may not see your shell PATH. Replace the command/args with:
+```json
+"command": "/bin/zsh",
+"args": ["-lc", "npx -y supasidebar-mcp"]
+```
+
+**Codex's `/mcp` panel shows fewer tools than expected**
+Known display bug ([openai/codex#17021](https://github.com/openai/codex/issues/17021)) — Codex CLI's `/mcp` view under-reports MCP tools, even though all of them are registered and callable. To verify what's actually available, ask the agent directly with a prompt like:
+
+> List every SupaSidebar tool you have access to — there should be at least 35.
+
+If Codex returns fewer, fall back to the MCP Inspector below for the ground truth.
+
+**See exactly which tools are exposed**
+
+Different clients show different views of MCP tools, and some (notably Codex) under-report what's actually registered. Use one of these to see the ground truth:
+
+- **Inside Claude Code:** type `/mcp` — reliably lists each connected server and its tool count.
+- **Inside Codex:** type `/mcp` (often under-reports — see entry above; prefer asking the agent or using the Inspector).
+- **Universal — MCP Inspector** (works without any AI client; spins up a local web UI):
+  ```bash
+  npx @modelcontextprotocol/inspector npx -y supasidebar-mcp
+  ```
+  Open the printed URL in a browser, click "Connect", then "List Tools" — you'll see all 36 tools with their schemas and can test-call any of them. This is the fastest way to confirm whether a tool-count problem is in the server or in the client.
 
 ## Available tools (36)
 
@@ -72,81 +174,71 @@ Add to `.cursor/mcp.json`:
 | Tool | Description |
 |------|-------------|
 | `search` | Fuzzy search across all links by name, URL, notes, or tags |
-| `list_spaces` | List all spaces |
-| `list_links` | List links in a space or folder |
-| `list_folders` | List folders in a space |
-| `list_recent` | List recently opened links, with pagination and date filters |
-| `list_tags` | List all tags with usage counts |
+| `list_spaces` | List all spaces (top-level collections) |
+| `list_links` | List links in a space or folder, with names, URLs, tags, and notes |
+| `list_folders` | List folders inside a space |
+| `list_recent` | Recently opened links — paginate with `limit`/`offset`, filter with `day`/`since`/`until` |
+| `list_tags` | List all tags, sorted by usage count |
 | `get_live_tabs` | Get currently open browser tabs, optionally filtered by browser |
-| `list_browser_profiles` | List browser profiles across all supported browsers |
-| `list_installed_browsers` | List supported browsers actually installed on this machine |
+| `list_browser_profiles` | List browser profiles discovered by SupaSidebar (for use with `open_link` and ATC rules) |
+| `list_installed_browsers` | List browsers actually installed on this machine (call before `open_link` if unsure) |
 
 ### Create and organize
 
 | Tool | Description |
 |------|-------------|
-| `add_link` | Save a new link (auto-fetches page title if name is omitted) |
+| `add_link` | Save a new link (auto-fetches page title if `name` is omitted) |
 | `create_space` | Create a new space |
-| `create_folder` | Create a folder inside a space |
-| `move_link` | Move a link to a different space or folder |
+| `create_folder` | Create a folder inside a space, optionally nested under a parent folder |
+| `move_link` | Move a link to a different space or folder (pass `targetFolderId: null` for unfiled root) |
 
 ### Actions
 
 | Tool | Description |
 |------|-------------|
-| `open_link` | Open a URL in a specific browser, browser profile, or the default |
+| `open_link` | Open a URL in a specific browser, browser profile, or the default browser |
 | `switch_space` | Switch to a different space |
 | `toggle_sidebar` | Show or hide the sidebar |
 | `toggle_command_panel` | Open or close the command panel |
 | `launch_sidebar` | Start SupaSidebar if it's not running |
-| `get_visibility` | Check if sidebar and command panel are visible |
-| `web_search` | Search the web using Google, DuckDuckGo, Perplexity, or custom shortcuts |
+| `get_visibility` | Check if sidebar and command panel are visible (without changing state) |
+| `web_search` | Search the web using Google, Bing, DuckDuckGo, Yahoo, Perplexity, Brave, Kagi, or any custom shortcut |
 
 ### Settings and shortcuts
 
 | Tool | Description |
 |------|-------------|
-| `get_settings` | View all settings grouped by category |
-| `update_setting` | Change any setting |
-| `enable_feature` | Apply a preset (Smart Attach, Independent Mode, Minimal Sidebar, etc.) |
-| `open_preferences` | Open Preferences, optionally to a specific tab |
-| `get_shortcuts` | List all keyboard shortcuts |
-| `update_shortcut` | Change a shortcut binding |
+| `get_settings` | Get all settings (grouped by category), or look up one setting by key or natural-language alias |
+| `update_setting` | Change a setting (boolean, string, or number) |
+| `enable_feature` | Apply a preset: Smart Attach, Independent Mode, Space Isolation, Minimal Sidebar, Full Featured |
+| `open_preferences` | Open the Preferences window, optionally jumping to a specific tab |
+| `get_shortcuts` | List all configurable keyboard shortcuts with current bindings |
+| `update_shortcut` | Change a shortcut binding (requires at least one modifier) |
 | `clear_shortcut` | Remove a shortcut binding |
 
 ### Custom web search shortcuts
 
 | Tool | Description |
 |------|-------------|
-| `list_search_shortcuts` | List all search engines and custom shortcuts |
-| `add_search_shortcut` | Create a custom search shortcut |
-| `remove_search_shortcut` | Delete a custom shortcut |
+| `list_search_shortcuts` | List all search engines and custom shortcuts with their keywords |
+| `add_search_shortcut` | Create a custom search shortcut for a specific site |
+| `remove_search_shortcut` | Delete a custom shortcut by keyword or ID |
 
 ### Air Traffic Control
 
 | Tool | Description |
 |------|-------------|
-| `list_atc_rules` | List URL routing rules |
-| `add_atc_rule` | Create a URL routing rule |
-| `update_atc_rule` | Update an existing rule |
-| `delete_atc_rule` | Delete a rule |
-| `reorder_atc_rules` | Reorder rules by priority |
+| `list_atc_rules` | List all URL routing rules (evaluated top-to-bottom, first match wins) |
+| `add_atc_rule` | Create a save rule (route saved links to a space) or open rule (open URLs in a specific browser/profile) |
+| `update_atc_rule` | Update fields on an existing ATC rule |
+| `delete_atc_rule` | Delete a rule by ID |
+| `reorder_atc_rules` | Change rule priority order |
 
 ### Guide
 
 | Tool | Description |
 |------|-------------|
-| `guide` | Get a complete guide to all MCP capabilities and feature presets |
-
-## Development
-
-```bash
-npm install
-npm run build
-
-# Run with mock data (no SupaSidebar app needed)
-npx tsx src/index.ts --mock
-```
+| `guide` | Get a complete guide to all MCP capabilities, common requests, setting categories, and feature presets. **Call this first if you're unsure which tool to use.** |
 
 ## License
 
