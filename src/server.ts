@@ -349,7 +349,7 @@ export function createServer(client: BridgeClient): McpServer {
 
   server.tool(
     "open_link",
-    "Open a URL in a specific browser, browser profile, or the default browser. IMPORTANT: if the user names a browser ('open in Brave', 'in my Work profile'), you MUST set the `browser` (and `profileId`) parameter - omitting it falls back to the system default browser, which is usually NOT what was asked for. Supported browsers (Safari, Chrome, Firefox, Edge, Arc, Brave, Vivaldi, Dia, Comet, Orion, Zen, Atlas, Wavebox, Helium) are RECOGNIZED but not necessarily INSTALLED on this user's machine - if `open_link` returns an 'is not installed' error, call `list_installed_browsers` to see what's actually available and pick from those. For profile-specific opening, call `list_browser_profiles` first to get profile IDs.",
+    "Open a URL in a specific browser, browser profile, or the default browser. IMPORTANT: if the user names a browser ('open in Brave', 'in my Work profile'), you MUST set the `browser` (and `profileId`) parameter - omitting it falls back to the system default browser, which is usually NOT what was asked for. Supported browsers (27 total): Safari, Chrome, Firefox, Edge, Arc, Brave, Vivaldi, Dia, Comet, Orion, Zen, Atlas, Wavebox, Helium, plus Chromium and Thorium, plus dev/beta/canary channels of Chrome (Beta/Canary/Dev), Edge (Beta/Canary/Dev), Brave (Beta/Nightly), Vivaldi (Snapshot), and Firefox (Nightly/Developer Edition). These are RECOGNIZED but not necessarily INSTALLED on this user's machine - if `open_link` returns an 'is not installed' error, call `list_installed_browsers` to see what's actually available and pick from those. For profile-specific opening, call `list_browser_profiles` first to get profile IDs.",
     {
       url: z.string().describe("The URL to open (e.g. 'https://github.com')."),
       browser: z.string().optional().describe("Browser to open in (e.g. 'Chrome', 'Arc', 'Safari', 'Brave'). REQUIRED when the user names a browser. Omit only when the user did not specify."),
@@ -611,7 +611,7 @@ export function createServer(client: BridgeClient): McpServer {
 
   server.tool(
     "list_installed_browsers",
-    "List browsers actually installed on this machine. Call this BEFORE open_link if you're not sure whether a browser the user named is available - the static list of 14 supported browsers does not mean all 14 are installed. Returns each browser's name (the exact string to pass to open_link's `browser` param), whether it's running, and which is the system default.",
+    "List browsers actually installed on this machine. Call this BEFORE open_link if you're not sure whether a browser the user named is available - SupaSidebar recognizes 27 browsers (14 main browsers plus dev/beta/canary channels and Chromium variants), but recognized doesn't mean installed. Returns each browser's name (the exact string to pass to open_link's `browser` param), whether it's running, and which is the system default.",
     {},
     async () => {
       try {

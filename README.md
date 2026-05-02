@@ -42,7 +42,7 @@ If `npx` isn't found, install Node. Pick whichever you prefer:
 
 The SupaSidebar app must be running - the MCP server talks to its local bridge API at `127.0.0.1:9847`.
 
-**Compatibility:** `supasidebar-mcp@0.2.2` requires **SupaSidebar app 0.17.2 or later**. Older app versions are missing bridge endpoints used by some of the 36 tools.
+**Compatibility:** `supasidebar-mcp@0.2.3` requires **SupaSidebar app 0.17.2 or later**. Older app versions are missing bridge endpoints used by some of the 36 tools.
 
 ### macOS permissions
 

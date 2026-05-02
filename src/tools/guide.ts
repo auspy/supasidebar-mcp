@@ -65,8 +65,8 @@ It organizes everything into Spaces (workspaces) with Folders and Tags.
   add_search_shortcut     → Add a custom website search (e.g. GitHub, Stack Overflow)
   remove_search_shortcut  → Remove a custom search shortcut
 
-  Built-in engines: Google, Bing, DuckDuckGo, Yahoo, Perplexity
-  Supported browsers: Safari, Chrome, Firefox, Edge, Arc, Brave, Vivaldi, Dia, Comet, Orion, Zen, Atlas, Wavebox, Helium
+  Built-in engines: Google, Bing, DuckDuckGo, Yahoo, Perplexity, Brave, Kagi
+  Supported browsers (27 total): Safari, Chrome, Firefox, Edge, Arc, Brave, Vivaldi, Dia, Comet, Orion, Zen, Atlas, Wavebox, Helium, plus Chromium, Thorium, and dev/beta/canary channels of Chrome, Edge, Brave, Vivaldi, and Firefox
 
 ═══════════════════════════════════════════
  COMMON USER REQUESTS → WHAT TO DO
