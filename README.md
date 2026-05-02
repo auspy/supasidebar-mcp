@@ -40,7 +40,7 @@ If `npx` isn't found, install Node. Pick whichever you prefer:
   ```
 - **Without Homebrew** — download the LTS installer from [nodejs.org/en/download](https://nodejs.org/en/download) and run it. The macOS `.pkg` installer puts `node` and `npx` on your PATH automatically; just restart your terminal afterwards.
 
-The SupaSidebar app must also be running (the MCP server talks to it on `127.0.0.1:9847`).
+The **SupaSidebar app version 0.17.2 or later** must be running — the MCP server talks to its local bridge API at `127.0.0.1:9847`. Older versions are missing some of the bridge endpoints used by the 36 tools and will fail with "endpoint not found" errors on certain calls.
 
 ### macOS permissions
 
