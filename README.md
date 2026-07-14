@@ -1,28 +1,48 @@
 # SupaSidebar MCP Server
 
-Give your AI assistant hands to manage your bookmarks, browser tabs, spaces, and web searches - right on your Mac. This server exposes **36 tools** that let Claude, Cursor, Codex, or any MCP client actually *do* things: save a page, open a URL in a specific browser profile, find that link you opened last Tuesday, tidy hundreds of unfiled bookmarks into folders, and more.
+Give your AI assistant local access to your current open tabs, saved bookmarks, and recently opened links across every browser on your Mac. Nothing leaves your device.
 
 Works with Claude Code, Claude Desktop, Cursor, Codex, VS Code Copilot, and any MCP-compatible client.
 
+> **New to SupaSidebar?** [SupaSidebar](https://supasidebar.com) is a free macOS app that brings an Arc-style sidebar to every browser - one place for your tabs, bookmarks, files, folders, and apps. This MCP server is the bridge that lets an AI agent drive it. You'll need the app installed and running (it's free to start), because every tool call runs locally against it.
+
 **Docs**: [docs.supasidebar.com/features/mcp](https://docs.supasidebar.com/features/mcp)
 
-## Why this is useful (even if you've never used SupaSidebar)
+## What you can do with it
 
-- **You have an AI assistant and a messy set of bookmarks/tabs.** Most bookmark tools are read-only or cloud-locked. This one hands your AI a full toolkit to search, save, organize, and open links and browser tabs on your machine, so you can offload the busywork by just asking.
-- **Never used [SupaSidebar](https://supasidebar.com)?** The app is a free download. Installing it plus this server is the fastest way to get an AI-native, local-first bookmark and tab manager - your links stay on your Mac, and your assistant can drive all of it.
-- **Building your own MCP server?** This is a clean reference implementation: stdio transport, a single runtime dependency, no telemetry, no file writes, and all traffic pinned to `127.0.0.1`. Fork it or read `src/` to see one honest way to bridge an AI client to a local desktop app.
+Once it's connected, you talk to your AI assistant in plain language and it uses the tools below to act on your behalf. A few things people ask for:
 
-## What you can ask your AI to do
+**Tame open tabs**
+> "What do I have open right now? Save everything about the Q3 launch into a new 'Launch' space and close the noise."
 
-Once it's connected, natural-language requests like these become one-shot actions:
+*(uses `get_live_tabs`, `create_space`, `add_link`)*
 
-- *"Save all my open browser tabs into a new 'Research' space."*
-- *"Find that Figma link I opened last Tuesday and open it in my work Chrome profile."*
-- *"Organize my unfiled bookmarks into folders by topic."*
-- *"Search Perplexity for the latest on MCP, then save the top result."*
-- *"Set up a rule: any GitHub link I save goes to my 'Dev' space."*
+**Find that thing you saved**
+> "Find the pricing page I bookmarked last week - I think it had 'billing' in the notes."
 
-See the [full tool list](#available-tools-36) below for everything it can reach.
+*(uses `search`, `list_recent`)*
+
+**Organize without clicking**
+> "My unfiled links are a mess. Group them into folders by topic and move them there."
+
+*(uses `list_links`, `create_folder`, `move_link`)*
+
+**Open things in the right place**
+> "Open my three design links in Chrome's Work profile."
+
+*(uses `list_browser_profiles`, `open_link`)*
+
+**Automate routing once, forever**
+> "From now on, always open figma.com links in my browser's Design profile, and save any URL from my company domain into the 'Work' space."
+
+*(uses `add_atc_rule`)*
+
+**Recall your day**
+> "What did I open yesterday afternoon?"
+
+*(uses `list_recent` with date filters)*
+
+All 36 tools are listed [further down](#available-tools-36). Nothing leaves your Mac - see [Trust & Privacy](#trust--privacy).
 
 ## How it works
 
