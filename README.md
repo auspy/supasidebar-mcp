@@ -63,7 +63,39 @@ The MCP server is a thin bridge. It translates AI tool calls into local HTTP req
 
 ## Prerequisites
 
-You need **Node.js 18 or newer** (which provides `npx`). Check with:
+New to SupaSidebar? Do these three steps in order. If you already run the app, skip to [Setup](#setup).
+
+### 1. Install and launch the SupaSidebar app
+
+The MCP server is only a bridge - it needs the SupaSidebar Mac app running to do anything. Install it with Homebrew or a direct download:
+
+- **With Homebrew** (one command, and `brew upgrade` keeps it current):
+  ```bash
+  brew install --cask supasidebar
+  ```
+  [Cask on formulae.brew.sh](https://formulae.brew.sh/cask/supasidebar)
+- **Direct download** - go to **[supasidebar.com](https://supasidebar.com)**, click **Download For Free**, then drag **SupaSidebar** into your **Applications** folder.
+
+Then **launch the app and leave it running** - the server talks to its local bridge API at `127.0.0.1:9847`, which is only available while the app is open.
+
+**Requirements:** macOS 14 (Sonoma) or later. The download is free.
+
+**Version compatibility:** `supasidebar-mcp@0.2.3` requires **SupaSidebar app 0.17.2 or later**. Older app versions are missing bridge endpoints used by some of the 36 tools. Check your version in **SupaSidebar → About**, and update via **SupaSidebar → Check for Updates** if needed.
+
+### 2. Grant macOS permissions
+
+SupaSidebar needs two macOS permissions for the MCP tools to work end-to-end (especially anything touching browsers, tabs, or windows). Open the relevant pane in **System Settings → Privacy & Security**:
+
+- **Accessibility** - required for window/sidebar control, global shortcuts, and tab management.
+  Open: [Privacy & Security → Accessibility](x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility)
+- **Automation** - required for browser integration (read live tabs, open URLs in specific browsers/profiles via AppleScript).
+  Open: [Privacy & Security → Automation](x-apple.systempreferences:com.apple.preference.security?Privacy_Automation)
+
+Make sure **SupaSidebar** is checked in both panes. If you grant a permission while the app is running, quit and relaunch SupaSidebar so it picks up the new permission.
+
+### 3. Install Node.js 18 or newer
+
+The server runs via `npx`, which comes with Node.js. Check whether you already have it:
 
 ```bash
 node --version    # should print v18.x or higher
@@ -78,20 +110,7 @@ If `npx` isn't found, install Node. Pick whichever you prefer:
   ```
 - **Without Homebrew** - download the LTS installer from [nodejs.org/en/download](https://nodejs.org/en/download) and run it. The macOS `.pkg` installer puts `node` and `npx` on your PATH automatically; just restart your terminal afterwards.
 
-The SupaSidebar app must be running - the MCP server talks to its local bridge API at `127.0.0.1:9847`.
-
-**Compatibility:** `supasidebar-mcp@0.2.3` requires **SupaSidebar app 0.17.2 or later**. Older app versions are missing bridge endpoints used by some of the 36 tools.
-
-### macOS permissions
-
-SupaSidebar needs two macOS permissions for the MCP tools to work end-to-end (especially anything touching browsers, tabs, or windows). Open the relevant pane in **System Settings → Privacy & Security**:
-
-- **Accessibility** - required for window/sidebar control, global shortcuts, and tab management.
-  Open: [Privacy & Security → Accessibility](x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility)
-- **Automation** - required for browser integration (read live tabs, open URLs in specific browsers/profiles via AppleScript).
-  Open: [Privacy & Security → Automation](x-apple.systempreferences:com.apple.preference.security?Privacy_Automation)
-
-Make sure **SupaSidebar** is checked in both panes. If you grant a permission while the app is running, quit and relaunch SupaSidebar so it picks up the new permission.
+Once all three are done, continue to [Setup](#setup).
 
 ## Setup
 
