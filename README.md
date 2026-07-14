@@ -1,10 +1,28 @@
 # SupaSidebar MCP Server
 
-Let AI assistants interact with your [SupaSidebar](https://supasidebar.com) bookmarks, spaces, tabs, and more.
+Give your AI assistant hands to manage your bookmarks, browser tabs, spaces, and web searches - right on your Mac. This server exposes **36 tools** that let Claude, Cursor, Codex, or any MCP client actually *do* things: save a page, open a URL in a specific browser profile, find that link you opened last Tuesday, tidy hundreds of unfiled bookmarks into folders, and more.
 
 Works with Claude Code, Claude Desktop, Cursor, Codex, VS Code Copilot, and any MCP-compatible client.
 
 **Docs**: [docs.supasidebar.com/features/mcp](https://docs.supasidebar.com/features/mcp)
+
+## Why this is useful (even if you've never used SupaSidebar)
+
+- **You have an AI assistant and a messy set of bookmarks/tabs.** Most bookmark tools are read-only or cloud-locked. This one hands your AI a full toolkit to search, save, organize, and open links and browser tabs on your machine, so you can offload the busywork by just asking.
+- **Never used [SupaSidebar](https://supasidebar.com)?** The app is a free download. Installing it plus this server is the fastest way to get an AI-native, local-first bookmark and tab manager - your links stay on your Mac, and your assistant can drive all of it.
+- **Building your own MCP server?** This is a clean reference implementation: stdio transport, a single runtime dependency, no telemetry, no file writes, and all traffic pinned to `127.0.0.1`. Fork it or read `src/` to see one honest way to bridge an AI client to a local desktop app.
+
+## What you can ask your AI to do
+
+Once it's connected, natural-language requests like these become one-shot actions:
+
+- *"Save all my open browser tabs into a new 'Research' space."*
+- *"Find that Figma link I opened last Tuesday and open it in my work Chrome profile."*
+- *"Organize my unfiled bookmarks into folders by topic."*
+- *"Search Perplexity for the latest on MCP, then save the top result."*
+- *"Set up a rule: any GitHub link I save goes to my 'Dev' space."*
+
+See the [full tool list](#available-tools-36) below for everything it can reach.
 
 ## How it works
 
