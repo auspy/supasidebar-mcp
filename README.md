@@ -42,7 +42,7 @@ Once it's connected, you talk to your AI assistant in plain language and it uses
 
 *(uses `list_recent` with date filters)*
 
-All 36 tools are listed [further down](#available-tools-36). Nothing leaves your Mac - see [Trust & Privacy](#trust--privacy).
+All available tools are listed [further down](#available-tools). Nothing leaves your Mac - see [Trust & Privacy](#trust--privacy).
 
 ## How it works
 
@@ -80,7 +80,7 @@ Then **launch the app and leave it running** - the server talks to its local bri
 
 **Requirements:** macOS 14 (Sonoma) or later. The download is free.
 
-**Version compatibility:** `supasidebar-mcp@0.2.3` requires **SupaSidebar app 0.17.2 or later**. Older app versions are missing bridge endpoints used by some of the 36 tools. Check your version in **SupaSidebar → About**, and update via **SupaSidebar → Check for Updates** if needed.
+**Version compatibility:** `supasidebar-mcp@0.2.3` requires **SupaSidebar app 0.17.2 or later** for its stable tools. The Auto-Close Never Close tools require an app build that includes the Never Close Rules beta feature. Check your version in **SupaSidebar → About**, and update via **SupaSidebar → Check for Updates** if needed.
 
 ### 2. Grant macOS permissions
 
@@ -234,9 +234,9 @@ Different clients show different views of MCP tools, and some (notably Codex) un
   ```bash
   npx @modelcontextprotocol/inspector npx -y supasidebar-mcp
   ```
-  Open the printed URL in a browser, click "Connect", then "List Tools" - you'll see all 36 tools with their schemas and can test-call any of them. This is the fastest way to confirm whether a tool-count problem is in the server or in the client.
+  Open the printed URL in a browser, click "Connect", then "List Tools" - you'll see every registered tool with its schema and can test-call any of them. This is the fastest way to confirm whether a tool-count problem is in the server or in the client.
 
-## Available tools (36)
+## Available tools
 
 ### Browse and search
 
@@ -302,6 +302,15 @@ Different clients show different views of MCP tools, and some (notably Codex) un
 | `update_atc_rule` | Update fields on an existing ATC rule |
 | `delete_atc_rule` | Delete a rule by ID |
 | `reorder_atc_rules` | Change rule priority order |
+
+### Auto-Close Never Close Rules
+
+| Tool | Description |
+|------|-------------|
+| `list_auto_close_rules` | List rules that protect matching tabs from Auto-Close |
+| `add_auto_close_rule` | Protect a domain, its subdomains, or a matching URL fragment |
+| `update_auto_close_rule` | Update a rule's value or match mode |
+| `delete_auto_close_rule` | Delete a protection rule by ID |
 
 ### Guide
 

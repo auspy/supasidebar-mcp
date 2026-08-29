@@ -2,7 +2,7 @@
 // Used for testing the MCP server without the SupaSidebar app running.
 // Activate with: --mock flag or SUPASIDEBAR_MCP_MOCK=1 env var.
 
-import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut, ATCRule, ATCRuleInput, BrowserProfile } from "./types.js";
+import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut, ATCRule, ATCRuleInput, AutoCloseRule, AutoCloseRuleInput, BrowserProfile } from "./types.js";
 
 const spaces: Space[] = [
   { id: "sp-1", name: "Work", color: "#3B82F6", icon: "briefcase", linkCount: 5, folderCount: 2, order: 0 },
@@ -161,6 +161,11 @@ const mockATCRules: ATCRule[] = [
     openInProfileID: "com.google.Chrome:Default", openInProfileName: "Personal", sourceBrowser: null,
     sourceBrowserName: null, sourceSpaceID: null, createdAt: "2026-01-02T00:00:00Z",
   },
+];
+
+const mockAutoCloseRules: AutoCloseRule[] = [
+  { id: "autoclose-1", value: "music.youtube.com", matchMode: "domain" },
+  { id: "autoclose-2", value: "/important/", matchMode: "contains" },
 ];
 
 const mockBrowserProfiles: BrowserProfile[] = [
@@ -431,6 +436,35 @@ export function createMockClient(): BridgeClient {
       mockATCRules.push(...reordered, ...remaining);
       mockATCRules.forEach((r, i) => { r.order = i; });
       return { ok: true, count: orderedIds.length };
+    },
+
+    async listAutoCloseRules(): Promise<AutoCloseRule[]> {
+      return mockAutoCloseRules;
+    },
+
+    async addAutoCloseRule(input: AutoCloseRuleInput): Promise<ActionResult> {
+      const rule: AutoCloseRule = {
+        id: `autoclose-${Date.now()}`,
+        value: input.value,
+        matchMode: input.matchMode ?? "domain",
+      };
+      mockAutoCloseRules.push(rule);
+      return { ok: true, ...rule };
+    },
+
+    async updateAutoCloseRule(id: string, updates: Partial<AutoCloseRuleInput>): Promise<ActionResult> {
+      const rule = mockAutoCloseRules.find((candidate) => candidate.id === id);
+      if (!rule) return { ok: false, error: `Never Close rule not found: ${id}` };
+      if (updates.value !== undefined) rule.value = updates.value;
+      if (updates.matchMode !== undefined) rule.matchMode = updates.matchMode;
+      return { ok: true, ...rule };
+    },
+
+    async deleteAutoCloseRule(id: string): Promise<ActionResult> {
+      const index = mockAutoCloseRules.findIndex((rule) => rule.id === id);
+      if (index === -1) return { ok: false, error: `Never Close rule not found: ${id}` };
+      mockAutoCloseRules.splice(index, 1);
+      return { ok: true, id };
     },
 
     async listBrowserProfiles(): Promise<BrowserProfile[]> {

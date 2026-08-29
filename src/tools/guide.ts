@@ -58,6 +58,16 @@ It organizes everything into Spaces (workspaces) with Folders and Tags.
     Save rules → When saving a link (Cmd+Ctrl+S), route it to a specific space
     Open rules → When opening a link, open it in a specific browser/profile
 
+🛡️ AUTO-CLOSE PROTECTION (read + write)
+  list_auto_close_rules   → See rules that protect matching tabs from Auto-Close
+  add_auto_close_rule     → Protect a domain or URL pattern
+  update_auto_close_rule  → Change a rule's value or match mode
+  delete_auto_close_rule  → Remove a protection rule
+
+  Match modes:
+    domain   → Protect a site and all of its subdomains
+    contains → Protect a tab when its full URL contains the rule text
+
 🌐 BROWSER & SEARCH
   open_link               → Open a URL in a specific browser, browser profile, or default
   web_search              → Search using any engine or custom website shortcut
@@ -153,6 +163,15 @@ It organizes everything into Spaces (workspaces) with Folders and Tags.
 "Delete that ATC rule"
   → list_atc_rules (to get the ID) → delete_atc_rule id="..."
 
+"Never auto-close my Gmail tabs"
+  → add_auto_close_rule value="mail.google.com" matchMode="domain"
+
+"Show me which tabs are protected from Auto-Close"
+  → list_auto_close_rules
+
+"Delete that Never Close rule"
+  → list_auto_close_rules (to get the ID) → delete_auto_close_rule id="..."
+
 ═══════════════════════════════════════════
  SETTING CATEGORIES
 ═══════════════════════════════════════════
@@ -192,6 +211,10 @@ Use get_settings with a category to focus: get_settings category="sidebar"
 • New rules are added at the top (highest priority). After creating a rule,
   review other rules below - if the new rule is broad, it may shadow more
   specific rules. Offer to reorder if needed.
+
+• Never Close rules are independent. Any matching rule protects the tab, so
+  they do not have a priority order. Prefer domain mode for an entire site and
+  contains mode for a specific URL fragment.
 
 • list_recent: the default limit (50) is small relative to a power user's
   history. If a link doesn't show up, don't conclude it isn't there — try:

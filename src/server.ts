@@ -17,6 +17,7 @@ import { handleGetGuide } from "./tools/guide.js";
 import { handleOpenLink, handleWebSearch, handleListSearchShortcuts, handleAddSearchShortcut, handleRemoveSearchShortcut } from "./tools/browser.js";
 import { handleCreateSpace, handleCreateFolder, handleAddLink, handleMoveLink } from "./tools/mutations.js";
 import { handleListATCRules, handleAddATCRule, handleUpdateATCRule, handleDeleteATCRule, handleReorderATCRules, handleListBrowserProfiles, handleListInstalledBrowsers } from "./tools/atc.js";
+import { handleListAutoCloseRules, handleAddAutoCloseRule, handleUpdateAutoCloseRule, handleDeleteAutoCloseRule } from "./tools/autoclose.js";
 
 export function createServer(client: BridgeClient): McpServer {
   const server = new McpServer({
@@ -590,6 +591,69 @@ export function createServer(client: BridgeClient): McpServer {
     async ({ orderedIds }) => {
       try {
         return { content: [{ type: "text", text: await handleReorderATCRules(client, orderedIds) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  // --- Auto-Close Never Close Rules ---
+
+  server.tool(
+    "list_auto_close_rules",
+    "List all Auto-Close Never Close rules. Any tab matching a rule is protected when automatic archiving runs.",
+    {},
+    async () => {
+      try {
+        return { content: [{ type: "text", text: await handleListAutoCloseRules(client) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "add_auto_close_rule",
+    "Create an Auto-Close Never Close rule. Domain mode protects a site and all subdomains. Contains mode protects tabs when the full URL contains the provided text.",
+    {
+      value: z.string().min(1).describe("Domain or URL text to protect, for example 'mail.google.com' or '/important/'."),
+      matchMode: z.enum(["domain", "contains"]).optional().describe("'domain' protects the site and subdomains. 'contains' checks the full URL. Defaults to 'domain'."),
+    },
+    async ({ value, matchMode }) => {
+      try {
+        return { content: [{ type: "text", text: await handleAddAutoCloseRule(client, { value, matchMode }) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "update_auto_close_rule",
+    "Update an Auto-Close Never Close rule. Provide value, matchMode, or both. Get rule IDs from list_auto_close_rules.",
+    {
+      id: z.string().describe("The Never Close rule ID to update. Get IDs from list_auto_close_rules."),
+      value: z.string().min(1).optional().describe("New domain or URL text to protect."),
+      matchMode: z.enum(["domain", "contains"]).optional().describe("New match mode."),
+    },
+    async ({ id, ...updates }) => {
+      try {
+        return { content: [{ type: "text", text: await handleUpdateAutoCloseRule(client, id, updates) }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: (err as Error).message }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    "delete_auto_close_rule",
+    "Delete an Auto-Close Never Close rule by ID. Get rule IDs from list_auto_close_rules.",
+    {
+      id: z.string().describe("The Never Close rule ID to delete."),
+    },
+    async ({ id }) => {
+      try {
+        return { content: [{ type: "text", text: await handleDeleteAutoCloseRule(client, id) }] };
       } catch (err) {
         return { content: [{ type: "text", text: (err as Error).message }], isError: true };
       }

@@ -97,6 +97,17 @@ export interface SearchShortcut {
   id?: string;
 }
 
+export interface AutoCloseRule {
+  id: string;
+  value: string;
+  matchMode: "domain" | "contains";
+}
+
+export interface AutoCloseRuleInput {
+  value: string;
+  matchMode?: "domain" | "contains";
+}
+
 export interface ATCRule {
   id: string;
   name: string;
@@ -181,6 +192,10 @@ export interface BridgeClient {
   updateATCRule(id: string, updates: Partial<ATCRuleInput>): Promise<ActionResult>;
   deleteATCRule(id: string): Promise<ActionResult>;
   reorderATCRules(orderedIds: string[]): Promise<ActionResult>;
+  listAutoCloseRules(): Promise<AutoCloseRule[]>;
+  addAutoCloseRule(rule: AutoCloseRuleInput): Promise<ActionResult>;
+  updateAutoCloseRule(id: string, updates: Partial<AutoCloseRuleInput>): Promise<ActionResult>;
+  deleteAutoCloseRule(id: string): Promise<ActionResult>;
   listBrowserProfiles(): Promise<BrowserProfile[]>;
   listInstalledBrowsers(): Promise<InstalledBrowser[]>;
 }

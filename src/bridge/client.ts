@@ -6,7 +6,7 @@
 // The SupaSidebar app runs a local HTTP server that this client talks to.
 // No data ever leaves your machine through this MCP server.
 
-import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut, ATCRule, ATCRuleInput, BrowserProfile, InstalledBrowser } from "./types.js";
+import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut, ATCRule, ATCRuleInput, AutoCloseRule, AutoCloseRuleInput, BrowserProfile, InstalledBrowser } from "./types.js";
 
 // Hardcoded. Not configurable. This is a trust decision.
 const BRIDGE_HOST = "127.0.0.1";
@@ -229,6 +229,22 @@ export function createBridgeClient(): BridgeClient {
 
     async reorderATCRules(orderedIds: string[]): Promise<ActionResult> {
       return request<ActionResult>("/atc/rules/reorder", undefined, "POST", { orderedIds });
+    },
+
+    async listAutoCloseRules(): Promise<AutoCloseRule[]> {
+      return request<AutoCloseRule[]>("/autoclose/rules");
+    },
+
+    async addAutoCloseRule(rule: AutoCloseRuleInput): Promise<ActionResult> {
+      return request<ActionResult>("/autoclose/rules", undefined, "POST", rule as unknown as Record<string, unknown>);
+    },
+
+    async updateAutoCloseRule(id: string, updates: Partial<AutoCloseRuleInput>): Promise<ActionResult> {
+      return request<ActionResult>(`/autoclose/rules/${id}`, undefined, "PUT", updates as unknown as Record<string, unknown>);
+    },
+
+    async deleteAutoCloseRule(id: string): Promise<ActionResult> {
+      return request<ActionResult>(`/autoclose/rules/${id}`, undefined, "DELETE");
     },
 
     async listBrowserProfiles(): Promise<BrowserProfile[]> {
