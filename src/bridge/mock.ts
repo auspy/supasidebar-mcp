@@ -63,12 +63,11 @@ const mockSettingsState = new Map<string, boolean | string | number>([
   ["isResizable", true],
   ["isCompactMode", false],
   ["browserAutoVisibilityEnabled", true],
-  ["smartAttachFillScreen", true],
-  ["autoTileWindows", "smart"],
-  ["sidebarHideBehavior", "fill"],
+  ["browserShowBehavior", "fillOnChange"],
+  ["browserHideBehavior", "restore"],
   ["keepSidebarVisibleWithAllApps", false],
   ["showSidebarOnFinder", false],
-  ["browserWindowAdjustmentMode", "fill"],
+  ["browserWindowAdjustmentMode", "none"],
   ["floatingButtonEnabled", false],
   ["preventBrowserOverlap", true],
   ["smartSideSwitch", false],
@@ -101,8 +100,8 @@ const mockSettingsState = new Map<string, boolean | string | number>([
 
 const settingTypes: Record<string, "bool" | "string" | "number"> = {
   isLeftSide: "bool", isDraggable: "bool", isResizable: "bool", isCompactMode: "bool",
-  browserAutoVisibilityEnabled: "bool", smartAttachFillScreen: "bool", autoTileWindows: "string",
-  sidebarHideBehavior: "string", keepSidebarVisibleWithAllApps: "bool", showSidebarOnFinder: "bool",
+  browserAutoVisibilityEnabled: "bool", browserShowBehavior: "string", browserHideBehavior: "string",
+  keepSidebarVisibleWithAllApps: "bool", showSidebarOnFinder: "bool",
   browserWindowAdjustmentMode: "string", floatingButtonEnabled: "bool", preventBrowserOverlap: "bool",
   smartSideSwitch: "bool", opacityOnFocusChange: "bool", spaceColorTintEnabled: "bool",
   spaceColorTintOpacity: "number", spaceNavigationEnabled: "bool",
@@ -118,8 +117,8 @@ const settingTypes: Record<string, "bool" | "string" | "number"> = {
 
 const settingCategories: Record<string, string> = {
   isLeftSide: "sidebar", isDraggable: "sidebar", isResizable: "sidebar", isCompactMode: "sidebar",
-  browserAutoVisibilityEnabled: "sidebar", smartAttachFillScreen: "sidebar", autoTileWindows: "sidebar",
-  sidebarHideBehavior: "sidebar", keepSidebarVisibleWithAllApps: "sidebar", showSidebarOnFinder: "sidebar",
+  browserAutoVisibilityEnabled: "sidebar", browserShowBehavior: "sidebar", browserHideBehavior: "sidebar",
+  keepSidebarVisibleWithAllApps: "sidebar", showSidebarOnFinder: "sidebar",
   browserWindowAdjustmentMode: "sidebar", floatingButtonEnabled: "sidebar", preventBrowserOverlap: "sidebar",
   smartSideSwitch: "sidebar", opacityOnFocusChange: "appearance", spaceColorTintEnabled: "appearance",
   spaceColorTintOpacity: "appearance", spaceNavigationEnabled: "spaces",

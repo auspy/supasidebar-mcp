@@ -30,24 +30,18 @@ const settingsMeta: Record<string, SettingMeta> = {
     aliases: ["compact mode", "compact", "narrow sidebar", "small sidebar", "mini mode"],
   },
   browserAutoVisibilityEnabled: {
-    description: "Smart Attach — sidebar auto-shows when a browser is in focus and hides when you switch to other apps",
-    aliases: ["smart attach", "auto show", "auto hide", "auto visibility", "browser attach", "show with browser"],
+    description: "Auto Show on Browser Focus: sidebar opens automatically when you switch to a browser and hides when you switch to other apps",
+    aliases: ["auto show", "auto hide", "auto visibility", "show with browser", "auto show on browser focus"],
   },
-  smartAttachFillScreen: {
-    description: "When Smart Attach shows the sidebar, browser fills the remaining screen space",
-    aliases: ["fill screen", "smart attach fill", "browser fill"],
-    requires: ["browserAutoVisibilityEnabled"],
+  browserShowBehavior: {
+    description: "When Sidebar Opens: what happens to browser windows. 'off' = leave them alone, 'tileOnOpen' = auto-tile up to 4 browser windows alongside the sidebar, 'fillOnChange' = maximize the frontmost browser window into the leftover space. Runs once when the sidebar opens, not on browser switch",
+    aliases: ["when sidebar opens", "show behavior", "auto tile", "auto-tile", "tile windows", "tiling", "window tiling", "arrange windows", "maximize browser", "fill screen on open", "browser fill"],
+    options: ["off", "tileOnOpen", "fillOnChange"],
   },
-  autoTileWindows: {
-    description: "Auto-tile browser windows alongside sidebar. 'smart' tiles only the active profile's windows, 'all' tiles every browser window",
-    aliases: ["auto tile", "tile windows", "tiling", "window tiling", "arrange windows"],
-    options: ["off", "smart", "all"],
-    requires: ["browserAutoVisibilityEnabled"],
-  },
-  sidebarHideBehavior: {
-    description: "When sidebar hides: 'fill' expands browser to fill the freed space, 'restore' returns browser to its original size",
-    aliases: ["hide behavior", "sidebar hide", "browser restore"],
-    options: ["fill", "restore"],
+  browserHideBehavior: {
+    description: "When Sidebar Hides: what happens to browser windows. 'restore' = return them to where they were before the sidebar opened (default), 'expand' = front browser expands to fill the screen, 'leave' = leave them as they are",
+    aliases: ["when sidebar hides", "hide behavior", "sidebar hide", "browser restore", "restore browser position", "expand browser", "leave browser"],
+    options: ["restore", "expand", "leave"],
   },
   keepSidebarVisibleWithAllApps: {
     description: "Keep sidebar visible even when non-browser apps are in focus (overrides Smart Attach's hide-on-switch behavior)",
@@ -58,9 +52,10 @@ const settingsMeta: Record<string, SettingMeta> = {
     aliases: ["show on finder", "finder sidebar", "sidebar with finder"],
   },
   browserWindowAdjustmentMode: {
-    description: "How sidebar adjusts browser windows: 'none' = no adjustment, 'minimal' = nudge to avoid overlap, 'fill' = resize to fill alongside sidebar",
-    aliases: ["browser adjustment", "window adjustment", "browser resize"],
-    options: ["none", "minimal", "fill"],
+    description: "Sidebar Browser Integration: 'none' = Smart Attach (sidebar attaches to the browser, moves overlapping windows aside, restores them on hide), 'independent' = sidebar opens on the screen edge with no browser interaction",
+    aliases: ["smart attach", "browser attach", "browser integration", "independent", "browser adjustment", "window adjustment"],
+    options: ["none", "independent"],
+    note: "Older installs may still hold 'minimal', 'fill' or 'dock'. The app shows those as Independent. Set 'none' or 'independent'.",
   },
   floatingButtonEnabled: {
     description: "Show a floating trigger button on the screen edge that toggles the sidebar when clicked",
@@ -211,12 +206,13 @@ interface FeaturePreset {
 const featurePresets: FeaturePreset[] = [
   {
     name: "Smart Attach",
-    description: "Sidebar auto-appears with browsers and fills the screen alongside them",
+    description: "Sidebar attaches to the browser and auto-shows with it, the browser fills the space beside it, and returns to its old position when the sidebar hides",
     aliases: ["smart attach", "auto show", "browser attach", "auto visibility"],
     settings: {
+      browserWindowAdjustmentMode: "none",
       browserAutoVisibilityEnabled: true,
-      smartAttachFillScreen: true,
-      autoTileWindows: "smart",
+      browserShowBehavior: "fillOnChange",
+      browserHideBehavior: "restore",
     },
   },
   {

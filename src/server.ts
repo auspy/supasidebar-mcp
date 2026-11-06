@@ -267,7 +267,7 @@ export function createServer(client: BridgeClient): McpServer {
     "update_setting",
     "Change a SupaSidebar setting. Use get_settings first to see available settings and their current values. Boolean settings use true/false, string settings use the documented options.",
     {
-      key: z.string().describe("The setting key to update (e.g. 'isCompactMode', 'autoTileWindows'). Use get_settings to see all keys."),
+      key: z.string().describe("The setting key to update (e.g. 'isCompactMode', 'browserShowBehavior'). Use get_settings to see all keys."),
       value: z.union([z.boolean(), z.string(), z.number()]).describe("The new value. Booleans for toggles, strings for mode selections, numbers for numeric settings."),
     },
     async ({ key, value }) => {

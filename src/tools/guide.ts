@@ -193,11 +193,12 @@ Use get_settings with a category to focus: get_settings category="sidebar"
 ═══════════════════════════════════════════
 
 • Settings that depend on other settings have a "requires" note.
-  Example: autoTileWindows requires browserAutoVisibilityEnabled.
+  Example: spaceColorTintOpacity requires spaceColorTintEnabled.
   Use enable_feature to set related settings together.
 
 • Each setting has aliases (natural-language names) visible in get_settings.
-  "Smart Attach", "auto show", "browser attach" all map to browserAutoVisibilityEnabled.
+  "Smart Attach" and "browser attach" map to browserWindowAdjustmentMode,
+  "auto show" maps to browserAutoVisibilityEnabled, "auto tile" maps to browserShowBehavior.
 
 • Shortcuts need at least one modifier (command, shift, option, control).
   Use get_shortcuts to see the "name" field needed for update_shortcut.
