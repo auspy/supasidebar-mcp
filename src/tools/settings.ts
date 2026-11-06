@@ -43,9 +43,11 @@ const settingsMeta: Record<string, SettingMeta> = {
     aliases: ["when sidebar hides", "hide behavior", "sidebar hide", "browser restore", "restore browser position", "expand browser", "leave browser"],
     options: ["restore", "expand", "leave"],
   },
-  keepSidebarVisibleWithAllApps: {
-    description: "Keep sidebar visible even when non-browser apps are in focus (overrides Smart Attach's hide-on-switch behavior)",
-    aliases: ["always visible", "show with all apps", "persistent sidebar", "keep visible"],
+  leaveBrowserBehavior: {
+    description: "When Leaving Browser: what the sidebar does when you switch to a non-browser app. 'keepVisible' = stay on screen, 'hide' = hide until you return to a browser",
+    aliases: ["when leaving browser", "leaving browser", "always visible", "show with all apps", "persistent sidebar", "keep visible"],
+    options: ["keepVisible", "hide"],
+    note: "Replaces the removed keepSidebarVisibleWithAllApps key. With 'hide', showSidebarOnFinder can still keep it open in Finder.",
   },
   showSidebarOnFinder: {
     description: "Show sidebar when Finder is the active app",
@@ -96,22 +98,24 @@ const settingsMeta: Record<string, SettingMeta> = {
     requires: ["spaceNavigationEnabled"],
   },
   saveTabsOnSpaceSwitch: {
-    description: "Automatically save all open browser tabs when switching to another space (so they can be restored later)",
-    aliases: ["save tabs", "remember tabs", "tab memory", "save on switch"],
-  },
-  tabRestoreBehavior: {
-    description: "When switching back to a space that has saved tabs: 'ask' = prompt user, 'always' = auto-restore, 'never' = don't restore",
-    aliases: ["restore tabs", "tab restore", "reopen tabs"],
-    options: ["ask", "always", "never"],
+    description: "Old hidden tab save/restore flow on space switch. It has no toggle in Preferences and the app turned it off for everyone once. Leave it false",
+    aliases: [],
+    note: "For tab isolation between spaces use lockedLinkedTabsEnabled (and autoLinkOpenTabsOnLeave). While this key is true it takes over from that feature on spaces with no linked profile.",
   },
   spaceSwitchSuggestionBehavior: {
     description: "When a browser profile that's linked to a space becomes active: 'ask' = suggest switching, 'always' = auto-switch, 'never' = ignore",
     aliases: ["space suggestion", "auto switch space", "profile space suggestion"],
     options: ["ask", "always", "never"],
   },
-  closeTabsOnSpaceChange: {
-    description: "Close all current browser tabs when switching to a different space (use with saveTabsOnSpaceSwitch for full isolation)",
-    aliases: ["close tabs on switch", "clear tabs", "tab isolation"],
+  lockedLinkedTabsEnabled: {
+    description: "Close and reopen tabs on space change: close unlocked tabs when you leave a space and reopen its remembered tabs when you come back. Off by default (Preferences > Spaces > Advanced)",
+    aliases: ["close and reopen tabs", "tab isolation", "close tabs on switch", "clear tabs", "restore tabs", "tab restore", "reopen tabs", "link open tabs to space", "linked tabs"],
+    note: "Closing covers the outgoing space's whole browser, so it can close tabs from other profiles in that browser. Locked tabs stay open across spaces.",
+  },
+  autoLinkOpenTabsOnLeave: {
+    description: "Remember all open tabs when leaving a space, so they reopen on return. Off = pick tabs one by one with Link to Space",
+    aliases: ["remember all open tabs", "remember tabs", "save tabs", "tab memory", "save on switch", "auto link tabs"],
+    requires: ["lockedLinkedTabsEnabled"],
   },
   autoLaunchBrowserOnProfileSpace: {
     description: "When switching to a space linked to a browser profile, automatically launch that browser if not running",
@@ -217,21 +221,22 @@ const featurePresets: FeaturePreset[] = [
   },
   {
     name: "Independent Mode",
-    description: "Sidebar stays visible regardless of which app is active, no auto-show/hide",
+    description: "Sidebar sits on the screen edge with no browser attachment and stays visible whichever app is active, no auto-show/hide",
     aliases: ["independent mode", "always visible", "standalone", "persistent"],
     settings: {
+      browserWindowAdjustmentMode: "independent",
       browserAutoVisibilityEnabled: false,
-      keepSidebarVisibleWithAllApps: true,
+      leaveBrowserBehavior: "keepVisible",
     },
   },
   {
     name: "Space Isolation",
-    description: "Full tab isolation between spaces — saves tabs on switch, closes old ones, restores on return",
+    description: "Full tab isolation between spaces: remembers open tabs when you leave a space, closes the unlocked ones, and reopens them when you return",
     aliases: ["space isolation", "tab isolation", "isolated spaces", "separate tabs per space"],
     settings: {
-      saveTabsOnSpaceSwitch: true,
-      closeTabsOnSpaceChange: true,
-      tabRestoreBehavior: "always",
+      lockedLinkedTabsEnabled: true,
+      autoLinkOpenTabsOnLeave: true,
+      saveTabsOnSpaceSwitch: false,
     },
   },
   {
