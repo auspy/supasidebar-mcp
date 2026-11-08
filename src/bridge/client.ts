@@ -5,13 +5,42 @@
 // command-line arguments, or any other configuration. This is intentional.
 // The SupaSidebar app runs a local HTTP server that this client talks to.
 // No data ever leaves your machine through this MCP server.
+//
+// AUTH: every request carries the access key the app writes to
+// ~/Library/Application Support/SupaSidebar/mcp-token (owner-only, 0600).
+// The app rejects requests without it, so web pages can't drive the bridge.
+// Keep in sync with: supasidebar/swiftapp/supasidebar/Managers/MCPBridgeAccessGuard.swift (token path, header checks)
 
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import type { BridgeClient, Space, Link, Folder, Tag, BrowserTab, RecentItem, ToggleResult, Setting, Shortcut, ActionResult, SearchShortcut, ATCRule, ATCRuleInput, AutoCloseRule, AutoCloseRuleInput, BrowserProfile, InstalledBrowser } from "./types.js";
 
 // Hardcoded. Not configurable. This is a trust decision.
 const BRIDGE_HOST = "127.0.0.1";
 const BRIDGE_PORT = 9847;
 const BASE_URL = `http://${BRIDGE_HOST}:${BRIDGE_PORT}/api/v1`;
+
+const TOKEN_PATH = join(homedir(), "Library", "Application Support", "SupaSidebar", "mcp-token");
+
+const TOKEN_MISSING =
+  "SupaSidebar's MCP access key is missing (~/Library/Application Support/SupaSidebar/mcp-token). " +
+  "Open SupaSidebar once, or quit and reopen it if it is already running, then retry.";
+
+const TOKEN_REJECTED =
+  "SupaSidebar did not accept the MCP access key in ~/Library/Application Support/SupaSidebar/mcp-token. " +
+  "Quit and reopen SupaSidebar, then retry.";
+
+// Read on every request (a 64-byte file) so a key the app just created is picked up without a restart.
+// A missing key is not fatal here: SupaSidebar versions before the access key ignore the header,
+// so the request still goes out and a 401 is what tells the user to open the app.
+function readToken(): string | undefined {
+  try {
+    return readFileSync(TOKEN_PATH, "utf8").trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 const APP_NOT_RUNNING =
   "SupaSidebar MCP bridge is not reachable on 127.0.0.1:9847. " +
@@ -30,11 +59,13 @@ async function request<T>(
     }
   }
 
-  const fetchOptions: RequestInit = { method };
-  if (body) {
-    fetchOptions.headers = { "Content-Type": "application/json" };
-    fetchOptions.body = JSON.stringify(body);
-  }
+  const token = readToken();
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (body) headers["Content-Type"] = "application/json";
+
+  const fetchOptions: RequestInit = { method, headers };
+  if (body) fetchOptions.body = JSON.stringify(body);
 
   let response: Response;
   try {
@@ -47,6 +78,10 @@ async function request<T>(
       throw new Error(APP_NOT_RUNNING);
     }
     throw new Error(`Failed to connect to SupaSidebar: ${(err as Error).message}`);
+  }
+
+  if (response.status === 401) {
+    throw new Error(token ? TOKEN_REJECTED : TOKEN_MISSING);
   }
 
   if (!response.ok) {

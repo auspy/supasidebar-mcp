@@ -58,8 +58,9 @@ The MCP server is a thin bridge. It translates AI tool calls into local HTTP req
 
 1. **Zero network requests** - communicates only with `127.0.0.1` (localhost). The host is hardcoded and cannot be changed.
 2. **Zero data storage** - no files written, no databases, no caches.
-3. **Zero telemetry** - no analytics, no tracking, no usage reporting.
-4. **One runtime dependency** - `@modelcontextprotocol/sdk` (the protocol library).
+3. **Access key** - SupaSidebar writes a random key to `~/Library/Application Support/SupaSidebar/mcp-token` that only your user can read. This server sends it with every request, and the app refuses anything without it, so websites you visit can't reach the bridge.
+4. **Zero telemetry** - no analytics, no tracking, no usage reporting.
+5. **One runtime dependency** - `@modelcontextprotocol/sdk` (the protocol library).
 
 ## Prerequisites
 
