@@ -1,6 +1,6 @@
 {
   "name": "supasidebar-mcp",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Give your AI assistant hands to manage bookmarks, browser tabs, spaces, and web searches on your Mac - 40+ local, zero-telemetry tools over MCP. Works with Claude, Cursor, Codex, and any MCP client. A clean single-dependency reference implementation. Powered by the free SupaSidebar app.",
   "type": "module",
   "bin": {

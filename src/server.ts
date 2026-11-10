@@ -22,7 +22,7 @@ import { handleListAutoCloseRules, handleAddAutoCloseRule, handleUpdateAutoClose
 export function createServer(client: BridgeClient): McpServer {
   const server = new McpServer({
     name: "supasidebar",
-    version: "0.2.0",
+    version: "0.2.4",
   });
 
   // --- Guide (call first to understand what's available) ---

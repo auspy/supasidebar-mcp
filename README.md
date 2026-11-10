@@ -81,7 +81,7 @@ Then **launch the app and leave it running** - the server talks to its local bri
 
 **Requirements:** macOS 14 (Sonoma) or later. The download is free.
 
-**Version compatibility:** `supasidebar-mcp@0.2.3` requires **SupaSidebar app 0.17.2 or later** for its stable tools. The Auto-Close Never Close tools require an app build that includes the Never Close Rules beta feature. Check your version in **SupaSidebar → About**, and update via **SupaSidebar → Check for Updates** if needed.
+**Version compatibility:** `supasidebar-mcp@0.2.4` requires **SupaSidebar app 0.17.2 or later** for its stable tools. **SupaSidebar 1.7.1 and later** only accept requests carrying the app's access key, so they need `supasidebar-mcp@0.2.4` or later. The Auto-Close Never Close tools require an app build that includes the Never Close Rules beta feature. Check your version in **SupaSidebar → About**, and update via **SupaSidebar → Check for Updates** if needed.
 
 ### 2. Grant macOS permissions
 
